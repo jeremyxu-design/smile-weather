@@ -118,3 +118,17 @@ test('metrics exclude hidden time and preview does not claim inference measureme
   m.pause(); m.resume(); m.frame(100000); m.frame(100020);
   assert.equal(m.activeMs, 1020); assert.equal(m.snapshot().frameIntervalP95Ms, 20);
 });
+test('collision feedback uses a bounded reusable marker pool and expires', () => {
+  const p = new ParticleSystem(80);
+  const h = { ...makeHead(), cx: 100, cy: 100, rx: 30, ry: 50, valid: true };
+  const i = p.allocate();
+  p.kind[i] = 1; p.x[i] = 100; p.y[i] = 0; p.vx[i] = 0; p.vy[i] = 700;
+  p.life[i] = p.maxLife[i] = 2; p.size[i] = 5;
+  const buffers = [p.hitX, p.hitY, p.hitLife];
+  p.step(.1, h, 800, 600);
+  assert.ok(p.collisions > 0); assert.ok(p.hitLife.some(life => life > 0));
+  assert.ok(p.vy[i] < 0); assert.equal(p.hitLife.length, 24);
+  p.release(i); p.step(.3, h, 800, 600);
+  assert.ok(p.hitLife.every(life => life === 0));
+  p.clear(); assert.deepEqual([p.hitX, p.hitY, p.hitLife], buffers);
+});
