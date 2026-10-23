@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f5ee">
+  <meta name="description" content="微笑落雨，大笑绽放。一个在浏览器本地运行、让烟花与头部碰撞的表情互动实验。">
+  <title>Smile Weather · 表情天气台</title>
+  
+  <style>
+
+:root{--paper:#f5f5ee;--ink:#24332e;--muted:#7b847c;--line:#e1e4da;--mint:#d0f1a8;--green:#547343;--dark:#23383c;--mono:ui-monospace,SFMono-Regular,Consolas,monospace;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--paper);font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,a,input,select,summary{-webkit-tap-highlight-color:transparent}button,select{font:inherit}button,summary{cursor:pointer}a{color:inherit;text-decoration:none}button{color:inherit}button:disabled{cursor:wait;opacity:.55}button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid #88ad61;outline-offset:4px}button svg, .step-icon svg,.local-note svg,.guide-footnote svg,summary svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}[hidden]{display:none!important}.svg-library{position:absolute;width:0;height:0;overflow:hidden}.shell{max-width:1360px;padding:0 42px;margin:0 auto}.site-header{height:100px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:11px;font-size:24px;font-weight:760;letter-spacing:-1px;line-height:1.1}.brand-light{font-weight:400}.brand small{display:block;margin-top:5px;font-size:10px;font-weight:500;letter-spacing:3px;color:var(--muted)}.brand-mark{width:41px;height:41px;border-radius:50%;background:var(--mint);display:grid;place-items:center;transform:rotate(12deg)}.brand-mark svg{width:29px;height:29px;fill:var(--ink)}.header-note{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}.tiny-dot{display:inline-block;width:6px;height:6px;background:#87a669;border-radius:50%;flex-shrink:0}.header-link{font-size:12px;display:flex;gap:22px;align-items:center}.header-link span{font-size:18px}.intro{display:flex;justify-content:space-between;align-items:center;padding:42px 0 32px;gap:24px}.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--muted);margin:0 0 13px;font-weight:500}h1{font-size:36px;letter-spacing:-1.5px;font-weight:580;margin:0;line-height:1.35}h1 span{color:#6d835d}.intro-copy{font-size:12px;color:var(--muted);line-height:1.9;letter-spacing:.4px;margin:0}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:30px;align-items:start}.experience{min-width:0}.stage{position:relative;aspect-ratio:4/3;min-height:400px;max-height:680px;background:#263c40;border-radius:18px;isolation:isolate;overflow:hidden}.stage:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#48645e66,transparent 66%),radial-gradient(circle at 18% 27%,#ffffff18 1px,transparent 1.5px),radial-gradient(circle at 81% 72%,#ffffff20 1px,transparent 1.5px);background-size:auto,77px 85px,113px 96px;pointer-events:none;z-index:-1}.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);visibility:hidden}.stage[data-mode="camera"] video,.stage[data-mode="loading"] video[data-ready="true"]{visibility:visible}.stage-wash{position:absolute;inset:0;background:linear-gradient(180deg,#10212640,transparent 25%,transparent 65%,#10212680);pointer-events:none}.stage canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;outline-offset:-5px}.stage[data-mode="preview"] canvas{touch-action:none;cursor:grab}.stage[data-mode="preview"] canvas:active{cursor:grabbing}.stage-top{position:absolute;left:22px;right:22px;top:20px;display:flex;justify-content:space-between;gap:10px;align-items:center;pointer-events:none;z-index:4}.input-badge{display:inline-flex;gap:7px;align-items:center;border:1px solid #ffffff26;border-radius:30px;padding:7px 11px;font-size:10px;color:#e2eae2;background:#1c303955;backdrop-filter:blur(8px);letter-spacing:.5px}.status-dot{width:5px;height:5px;border-radius:50%;background:#9eafa5}.stage[data-mode="camera"] .status-dot{background:#c6f59b;box-shadow:0 0 0 3px #c6f59b18}.stage[data-mode="preview"] .input-badge{color:#ffdb9b;border-color:#ffdb9b55;background:#423824a0}.stage[data-mode="preview"] .status-dot{background:#ffdb9b}.local-note{display:flex;align-items:center;gap:5px;font-size:10px;color:#c2d2c9}.local-note svg{width:12px;height:12px}.welcome{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:54px 20px 45px;text-align:center}.weather-art{width:300px;max-width:60%;margin-top:-10px;margin-bottom:10px}.weather-art svg{width:100%;display:block}.welcome h2{font-size:24px;color:#f0f5e9;font-weight:500;letter-spacing:1.2px;margin:0 0 10px}.welcome>p:not(.privacy-note){font-size:12px;color:#b9c9c0;margin:0 0 25px;line-height:1.7}.button{display:inline-flex;gap:10px;align-items:center;justify-content:center;border:0;border-radius:9px;height:46px;padding:0 20px;font-size:13px;font-weight:600;transition:transform .15s,background .15s}.button:hover{transform:translateY(-1px)}.button-primary{background:#d2f2aa;color:#2b432b;box-shadow:0 5px 22px #12271b20;min-width:226px}.button-primary:hover{background:#def8bc}.button .button-arrow{width:17px;margin-left:20px}.button>svg:first-child{width:17px}.preview-link{background:transparent;border:0;color:#d2ddd3;font-size:11px;padding:13px 18px 3px}.preview-link span{margin-left:6px}.privacy-note{color:#91a79b;font-size:10px;margin:18px 0 0}.stage-bottom{position:absolute;bottom:19px;left:23px;right:23px;display:flex;justify-content:space-between;align-items:center;color:#aac2b08c;pointer-events:none;z-index:2}.stage-coordinate{font-family:var(--mono);font-size:8px;letter-spacing:1.5px}.stage-spark{font-size:25px;line-height:1}.toolbar{min-height:59px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:10px 0}.session-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;line-height:1.7}.muted-dot{background:#b4bbac}.toolbar-actions{display:flex;gap:10px;align-items:center;flex-shrink:0}.quiet-button{font-size:10px;display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;padding:7px 4px;white-space:nowrap}.quiet-button:hover{color:var(--green)}.quiet-button span{color:var(--muted)}.quality-control select{background:transparent;border:0;color:var(--muted);font-size:10px;padding:5px 2px;max-width:92px}.stop-button{color:#9d655b}.stop-button svg{width:13px;height:13px}.guide{padding-top:3px}.guide-heading h2{font-size:19px;letter-spacing:.4px;font-weight:550;margin:0 0 8px}.guide-heading p{font-size:11px;color:var(--muted);margin:0 0 25px}.guide-heading .eyebrow{font-size:8px;margin-bottom:14px;letter-spacing:1.3px}.step-card{position:relative;display:flex;align-items:center;gap:13px;padding:20px 0;border-top:1px solid var(--line)}.step-icon{width:40px;height:43px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}.rain-icon{background:#e5ecea;color:#6d9197}.firework-icon{background:#f3e9df;color:#b28b55}.move-icon{background:#e9e8ec;color:#8d829f}.step-icon svg{width:23px;height:23px}.step-caption{font-family:var(--mono);font-size:8px;letter-spacing:1.1px;color:#949b8f;margin-bottom:6px}.step-card h3{font-size:13px;font-weight:550;margin:0 0 6px}.step-card p{font-size:10px;color:var(--muted);margin:0;line-height:1.6}.step-indicator{width:5px;height:5px;border-radius:50%;position:absolute;right:1px;top:40px;background:transparent}.step-card.active .step-indicator{background:#82a95f;box-shadow:0 0 0 4px #82a95f13}.step-card.active h3{color:#547343}.weather-status{background:#e9eddf;border-radius:12px;padding:17px 18px;margin-top:14px;min-height:157px}.weather-status-top{display:flex;justify-content:space-between;font-size:10px;color:#819071;margin-bottom:12px}.weather-status-top span:last-child{font-size:16px;line-height:12px}.weather-status>strong{font-size:18px;font-weight:500;letter-spacing:.3px}.weather-status>p{font-size:10px;color:#7f8c75;line-height:1.7;margin:8px 0 14px;min-height:17px}.smile-meter{height:3px;background:#d4dcc9;border-radius:3px;overflow:hidden}.smile-meter span{height:100%;display:block;width:0;background:#8caf69;transition:width .18s linear}.weather-status-bottom{display:flex;justify-content:space-between;font-size:8px;color:#88957c;margin-top:7px;font-family:var(--mono)}.guide-footnote{display:flex;gap:8px;align-items:center;margin-top:18px;color:#9aa18f}.guide-footnote svg{width:13px;height:13px}.guide-footnote p{font-size:9px;line-height:1.7;margin:0}.loading-overlay{position:absolute;inset:0;z-index:6;background:#22383ce8;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#edf4e8;text-align:center;padding:25px}.loading-overlay h2{font-size:20px;font-weight:500;margin:23px 0 10px}.loading-overlay p{font-size:12px;color:#b3c8ba;line-height:1.7;max-width:310px}.spinner{width:30px;height:30px;border:2px solid #d2f2aa33;border-top-color:#d2f2aa;border-radius:50%;animation:spin 1s linear infinite}.text-button{color:#bfcebf;border:0;border-bottom:1px solid #74877b;background:transparent;padding:5px 0;margin-top:18px;font-size:12px}.stage-hint{position:absolute;bottom:55px;left:12px;right:12px;display:flex;justify-content:center;pointer-events:none;z-index:4}.stage-hint span{font-size:12px;color:#e6eee7;background:#132923b3;border:1px solid #ffffff15;padding:9px 16px;border-radius:30px;backdrop-filter:blur(8px)}.preview-controls{position:absolute;z-index:5;bottom:52px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;background:#162b2de8;border:1px solid #ffffff26;border-radius:40px;padding:5px;white-space:nowrap}.preview-controls>span{font-size:9px;color:#afc1b4;padding:0 9px}.preview-controls button{font-size:11px;background:transparent;border:0;color:#d5ded6;padding:8px 14px;border-radius:30px}.preview-controls button.selected{background:#d3edb5;color:#2f4834}.stage[data-mode="preview"] .stage-hint{bottom:106px}.error-panel{display:flex;align-items:flex-start;gap:12px;background:#f5e9dd;padding:14px;border-radius:9px;margin-top:10px;font-size:12px;color:#805b39}.error-icon{border:1px solid #b58b60;border-radius:50%;height:18px;width:18px;text-align:center;flex-shrink:0}.error-panel strong{font-weight:600}.error-panel p{font-size:11px;line-height:1.8;margin:4px 0 0;color:#967654}.diagnostics{margin-top:29px;border:1px solid var(--line);border-radius:10px;background:#f0f1e9}.diagnostics summary{display:flex;justify-content:space-between;align-items:center;list-style:none;padding:14px 17px;font-size:11px;color:#7c8675}.diagnostics summary::-webkit-details-marker{display:none}.diagnostics summary>span:first-child{display:flex;gap:8px;align-items:center}.diagnostics summary svg{width:15px;height:15px}.summary-hint{font-size:9px;display:flex;align-items:center;gap:22px;color:#9ca493}.summary-hint>span{font-size:17px}.diagnostics[open] .summary-hint>span{transform:rotate(45deg)}.diagnostic-content{padding:0 17px 17px}.diagnostic-note{font-size:10px;line-height:1.6;color:#7f8978;margin:0 0 14px}.metrics-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metrics-grid>div{background:#fafbf6;padding:12px 9px;border:1px solid #e4e8dc;border-radius:6px;min-width:0}.metrics-grid span{display:block;font-size:8px;color:#8b9681;margin-bottom:7px}.metrics-grid strong{display:block;font-family:var(--mono);font-size:17px;font-weight:500;overflow-wrap:anywhere}.metrics-grid>div:last-child strong{font-size:12px;padding-top:5px}.debug-controls{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:10px;flex-wrap:wrap;margin-top:15px;color:#73806a}.debug-controls label{display:flex;align-items:center;gap:6px}.debug-controls input{accent-color:#79985c}.raw-scores{display:flex;gap:15px;font-family:var(--mono);font-size:9px}.raw-scores b{font-weight:500;color:#3c5137}.debug-explainer{font-size:9px;color:#95a08a;margin-bottom:0;line-height:1.8}.export-button{border:1px solid #d2dcc7;border-radius:5px;padding:6px 9px}footer{display:flex;justify-content:space-between;gap:20px;padding:25px 0 27px;font-size:8px;color:#9da593;font-family:var(--mono);letter-spacing:1px}footer>div{display:flex;gap:24px;font-family:inherit}footer a:hover{color:#4b6540}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.noscript{padding:20px;text-align:center;background:#f4ddc4}.about{max-width:800px;margin:0 auto;padding:40px 25px;font-size:14px;line-height:1.9}.about h1{font-size:30px;margin:28px 0}.about h2{font-size:19px;margin-top:30px}.about a{color:#53783c;text-decoration:underline}.about table{border-collapse:collapse;width:100%;font-size:12px}.about td,.about th{padding:12px;border-bottom:1px solid var(--line);text-align:left}.about code{font-size:12px;background:#e8ecdf;padding:3px 5px}.about .back-link{font-size:12px}@keyframes spin{to{transform:rotate(360deg)}}
+@media(min-width:1450px){.intro{padding:48px 0 38px}.stage{aspect-ratio:1.45}.weather-art{width:330px}.guide{padding-top:8px}.step-card{padding:23px 0}.weather-status{margin-top:20px}}
+@media(max-width:1100px){.shell{padding:0 26px}.workspace{grid-template-columns:minmax(0,1fr) 250px;gap:22px}h1{font-size:29px}.intro-copy{font-size:11px}.stage{min-height:450px;aspect-ratio:auto}.weather-art{width:250px}.guide-heading h2{font-size:18px}.step-card{gap:10px;padding:17px 0}.step-icon{width:35px;height:38px}.weather-status{padding:15px}.toolbar{flex-wrap:wrap}.metrics-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:760px){.shell{padding:0 18px}.site-header{height:78px}.brand{font-size:21px}.brand-mark{width:35px;height:35px}.brand-mark svg{width:25px;height:25px}.brand small{font-size:8px;letter-spacing:2.5px}.header-note{display:none}.header-link{font-size:10px;gap:12px}.intro{padding:27px 0 24px;display:block}.intro .eyebrow{font-size:8px;letter-spacing:1.25px;margin-bottom:12px}h1{font-size:27px;letter-spacing:-1px}h1 span{display:block;margin-top:3px}.intro-copy{font-size:11px;line-height:1.8;margin-top:13px}.intro-copy br{display:none}.workspace{grid-template-columns:1fr;gap:26px}.stage{min-height:460px;aspect-ratio:3/4;max-height:640px;border-radius:15px}.stage-top{left:15px;right:15px;top:16px}.input-badge{font-size:9px;padding:7px 9px}.local-note{font-size:8px}.local-note svg{width:11px;height:11px}.weather-art{width:270px;max-width:80%;margin-top:-10px}.welcome h2{font-size:22px}.welcome>p:not(.privacy-note){font-size:11px;max-width:230px}.button-primary{min-width:220px}.privacy-note{font-size:9px}.stage-coordinate{font-size:7px}.toolbar{min-height:68px;padding:13px 1px;row-gap:9px}.session-status{font-size:10px;max-width:100%;flex-basis:100%}.toolbar-actions{margin-left:auto}.guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 10px}.guide-heading{grid-column:1/-1}.guide-heading .eyebrow{font-size:8px;margin:0 0 9px}.guide-heading h2{font-size:18px}.guide-heading p{margin-bottom:18px}.step-card{flex-direction:column;align-items:flex-start;gap:12px;padding:15px 0 0}.step-caption{font-size:7px;letter-spacing:.7px}.step-card h3{font-size:11px;line-height:1.7;margin-bottom:5px}.step-card p{font-size:9px;line-height:1.8}.step-icon{width:34px;height:36px;border-radius:10px}.step-indicator{top:29px;right:5px}.weather-status{grid-column:1/-1;margin-top:23px;min-height:0;padding:17px}.weather-status>p{min-height:0}.weather-status-top{margin-bottom:9px}.weather-status>strong{font-size:17px}.guide-footnote{grid-column:1/-1;margin-top:12px}.guide-footnote p br{display:none}.diagnostics{margin-top:25px}.summary-hint{font-size:8px;gap:10px}.metrics-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.metrics-grid>div{padding:9px 5px}.metrics-grid span{font-size:7px}.metrics-grid strong{font-size:15px}.raw-scores{font-size:8px;gap:10px}.debug-explainer{font-size:8px}.debug-controls{gap:10px;font-size:9px}footer{font-size:7px;letter-spacing:.4px;align-items:flex-start;line-height:1.7}footer>div{flex-direction:column;gap:3px;text-align:right}.preview-controls{padding:4px;bottom:43px}.preview-controls button{padding:8px 12px}.preview-controls>span{font-size:8px;padding:0 7px}.stage[data-mode="preview"] .stage-hint{bottom:96px}.stage-hint span{font-size:10px}.stage-bottom{bottom:14px;left:16px;right:16px}}
+@media(max-width:360px){h1{font-size:24px}.shell{padding:0 13px}.stage{min-height:440px}.welcome h2{font-size:20px}.local-note{font-size:7px}.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.button,.smile-meter span{transition:none}.spinner{animation-duration:2s}}
+
+</style>
+  <script type="module">
+// CORE_START
+// config.mjs
+const VERSION = '0.1.0';
+const MEDIAPIPE_VERSION = '0.10.35';
+const ASSETS = {
+  bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',
+  wasm: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm',
+  model: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+};
+const CONFIG = Object.freeze({
+  renderHz: 60,
+  detectionHz: 15,
+  staleMs: 450,
+  smoothingMs: 75,
+  dwellMs: 300,
+  cooldownMs: 1500,
+  smileEnter: 0.40,
+  smileExit: 0.25,
+  laughSmileEnter: 0.50,
+  laughSmileExit: 0.35,
+  jawEnter: 0.50,
+  jawExit: 0.35,
+  particleLimit: 800,
+  lowParticleLimit: 400,
+  gravity: 260,
+  restitution: 0.68,
+  headPadding: 0.15,
+});
+const PALETTE = ['#ffe59a', '#ff9caa', '#b2f9df', '#a6c9ff', '#d4b9ff', '#fff5db'];
+
+// expression.mjs
+
+class HeldThreshold {
+  constructor() { this.reset(); }
+  reset() { this.on = false; this.pendingAt = null; }
+  update(enter, exit, now, dwell) {
+    const wantsChange = this.on ? exit : enter;
+    if (!wantsChange) this.pendingAt = null;
+    else {
+      if (this.pendingAt === null) this.pendingAt = now;
+      if (now - this.pendingAt >= dwell) {
+        this.on = !this.on;
+        this.pendingAt = null;
+      }
+    }
+    return this.on;
+  }
+}
+
+// Accept only named, finite outputs. A missing output is not a neutral expression.
+function extractExpression(result) {
+  const categories = result.faceBlendshapes?.[0]?.categories;
+  if (!result.faceLandmarks?.[0]?.length || !categories?.length) return null;
+  let left, right, jaw;
+  for (const category of categories) {
+    if (category.categoryName === 'mouthSmileLeft') left = category.score;
+    if (category.categoryName === 'mouthSmileRight') right = category.score;
+    if (category.categoryName === 'jawOpen') jaw = category.score;
+  }
+  if (![left, right, jaw].every(Number.isFinite)) return null;
+  return { smile: Math.max(0, Math.min(1, (left + right) / 2)), jaw: Math.max(0, Math.min(1, jaw)) };
+}
+
+class ExpressionMachine {
+  constructor(config = CONFIG) {
+    this.config = config;
+    this.smileLatch = new HeldThreshold();
+    this.laughLatch = new HeldThreshold();
+    this.lastBurst = -Infinity;
+    this.lastSample = null;
+    this.smile = 0;
+    this.jaw = 0;
+    this.state = 'no-face';
+  }
+  lose() {
+    this.smileLatch.reset();
+    this.laughLatch.reset();
+    this.lastSample = null;
+    this.smile = 0;
+    this.jaw = 0;
+    this.state = 'no-face';
+    // Keep the cooldown across tracking loss, so reacquisition cannot bypass it.
+    return { state: this.state, burst: false, smile: 0, jaw: 0 };
+  }
+  update(sample, now) {
+    const c = this.config;
+    if (!sample || !Number.isFinite(sample.smile) || !Number.isFinite(sample.jaw)) return this.lose();
+    if (this.lastSample !== null && (now - this.lastSample > c.staleMs || now < this.lastSample)) this.lose();
+    const first = this.lastSample === null;
+    const alpha = first || c.smoothingMs <= 0 ? 1 : 1 - Math.exp(-(now - this.lastSample) / c.smoothingMs);
+    this.smile += (sample.smile - this.smile) * alpha;
+    this.jaw += (sample.jaw - this.jaw) * alpha;
+    this.lastSample = now;
+    const before = this.state;
+    this.smileLatch.update(this.smile >= c.smileEnter, this.smile <= c.smileExit, now, c.dwellMs);
+    this.laughLatch.update(
+      this.smile >= c.laughSmileEnter && this.jaw >= c.jawEnter,
+      this.smile <= c.laughSmileExit || this.jaw <= c.jawExit,
+      now, c.dwellMs,
+    );
+    this.state = this.laughLatch.on ? 'laugh' : this.smileLatch.on ? 'smile' : 'idle';
+    const burst = this.state === 'laugh' && before !== 'laugh' && now - this.lastBurst >= c.cooldownMs;
+    if (burst) this.lastBurst = now;
+    return { state: this.state, burst, smile: this.smile, jaw: this.jaw };
+  }
+  expire(now) {
+    if (this.lastSample !== null && now - this.lastSample > this.config.staleMs) this.lose();
+    return this.state;
+  }
+  cooldownRemaining(now) { return Math.max(0, this.config.cooldownMs - (now - this.lastBurst)); }
+}
+
+// geometry.mjs
+const clamp = (x, low, high) => Math.max(low, Math.min(high, x));
+const TAU = Math.PI * 2;
+function angleDelta(a, b) { return ((b - a + Math.PI) % TAU + TAU) % TAU - Math.PI; }
+
+// Same cover + mirror transform as the video element, in CSS pixels (not DPR pixels).
+function coverTransform(videoWidth, videoHeight, width, height, mirror = true) {
+  const scale = Math.max(width / videoWidth, height / videoHeight);
+  const drawnWidth = videoWidth * scale, drawnHeight = videoHeight * scale;
+  return { width, height, drawnWidth, drawnHeight, offsetX: (width - drawnWidth) / 2, offsetY: (height - drawnHeight) / 2, mirror };
+}
+function mapLandmark(point, transform, out = {}) {
+  const x = point.x * transform.drawnWidth + transform.offsetX;
+  out.x = transform.mirror ? transform.width - x : x;
+  out.y = point.y * transform.drawnHeight + transform.offsetY;
+  return out;
+}
+function indicesFromConnections(connections) {
+  return [...new Set(connections.flatMap(({ start, end }) => [start, end]))];
+}
+function makeHead() {
+  return { cx: 0, cy: 0, rx: 1, ry: 1, angle: 0, vx: 0, vy: 0, omega: 0, vrx: 0, vry: 0, valid: false };
+}
+function estimateHead(landmarks, indices, transform, padding = 0.15) {
+  if (!landmarks?.[33] || !landmarks?.[263] || indices.length < 4) return null;
+  const a = mapLandmark(landmarks[33], transform), b = mapLandmark(landmarks[263], transform);
+  let angle = Math.atan2(b.y - a.y, b.x - a.x);
+  // Mirroring reverses eye order, but does not turn the head upside down.
+  if (angle > Math.PI / 2) angle -= Math.PI;
+  if (angle < -Math.PI / 2) angle += Math.PI;
+  const c = Math.cos(angle), s = Math.sin(angle);
+  const originX = (a.x + b.x) / 2, originY = (a.y + b.y) / 2;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const p = {};
+  for (const index of indices) {
+    if (!landmarks[index]) return null;
+    mapLandmark(landmarks[index], transform, p);
+    const dx = p.x - originX, dy = p.y - originY;
+    const x = c * dx + s * dy, y = -s * dx + c * dy;
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+  }
+  minY -= (maxY - minY) * padding;
+  const x = (minX + maxX) / 2, y = (minY + maxY) / 2;
+  const head = { cx: originX + c * x - s * y, cy: originY + s * x + c * y,
+    rx: (maxX - minX) * 0.5, ry: (maxY - minY) * 0.5, angle, valid: true };
+  return Object.values(head).every(v => typeof v !== 'number' || Number.isFinite(v)) && head.rx > 4 && head.ry > 4 ? head : null;
+}
+function followHead(head, target, dt) {
+  if (!target || !target.valid || dt <= 0) { head.valid = false; return; }
+  if (!head.valid) {
+    Object.assign(head, target, { vx: 0, vy: 0, omega: 0, vrx: 0, vry: 0, valid: true });
+    return;
+  }
+  const alpha = 1 - Math.exp(-20 * dt);
+  const dx = (target.cx - head.cx) * alpha, dy = (target.cy - head.cy) * alpha;
+  const da = angleDelta(head.angle, target.angle) * alpha;
+  const drx = (target.rx - head.rx) * alpha, dry = (target.ry - head.ry) * alpha;
+  head.vx = clamp(dx / dt, -650, 650); head.vy = clamp(dy / dt, -650, 650);
+  head.omega = clamp(da / dt, -4, 4);
+  head.vrx = clamp(drx / dt, -180, 180); head.vry = clamp(dry / dt, -180, 180);
+  head.cx += dx; head.cy += dy; head.angle += da; head.rx += drx; head.ry += dry;
+}
+
+// Continuous segment/ellipse intersection, including relative head translation.
+// Writes into a reusable output object to keep the particle loop allocation-free.
+function sweepEllipse(x0, y0, x1, y1, head, radius, dt, out) {
+  if (!head?.valid || head.rx <= 0 || head.ry <= 0) return false;
+  const c = Math.cos(head.angle), s = Math.sin(head.angle);
+  const rx = head.rx + radius, ry = head.ry + radius;
+  const dx0 = x0 - (head.cx - (head.vx || 0) * dt), dy0 = y0 - (head.cy - (head.vy || 0) * dt);
+  const dx1 = x1 - head.cx, dy1 = y1 - head.cy;
+  const ax = (c * dx0 + s * dy0) / rx, ay = (-s * dx0 + c * dy0) / ry;
+  const bx = (c * dx1 + s * dy1) / rx, by = (-s * dx1 + c * dy1) / ry;
+  const ux = bx - ax, uy = by - ay;
+  let t, hx, hy;
+  if (ax * ax + ay * ay < 1) {
+    if (bx * bx + by * by >= 1) return false;
+    const length = Math.hypot(bx, by);
+    hx = length > 1e-6 ? bx / length : 0;
+    hy = length > 1e-6 ? by / length : -1;
+    t = 1;
+  } else {
+    const A = ux * ux + uy * uy, B = 2 * (ax * ux + ay * uy), C = ax * ax + ay * ay - 1;
+    const discriminant = B * B - 4 * A * C;
+    if (A < 1e-12 || discriminant < 0) return false;
+    t = (-B - Math.sqrt(discriminant)) / (2 * A);
+    if (t < 0 || t > 1) return false;
+    hx = ax + ux * t; hy = ay + uy * t;
+  }
+  const localX = hx * rx, localY = hy * ry;
+  let nx = hx / rx, ny = hy / ry;
+  const normalLength = Math.hypot(nx, ny);
+  nx /= normalLength; ny /= normalLength;
+  out.nx = c * nx - s * ny; out.ny = s * nx + c * ny;
+  const offsetX = c * localX - s * localY, offsetY = s * localX + c * localY;
+  out.x = head.cx + offsetX + out.nx * 0.6;
+  out.y = head.cy + offsetY + out.ny * 0.6;
+  out.hvx = (head.vx || 0) - (head.omega || 0) * offsetY + c * hx * (head.vrx || 0) - s * hy * (head.vry || 0);
+  out.hvy = (head.vy || 0) + (head.omega || 0) * offsetX + s * hx * (head.vrx || 0) + c * hy * (head.vry || 0);
+  out.t = t;
+  return true;
+}
+function reflectVelocity(vx, vy, contact, restitution, out) {
+  const relativeX = vx - contact.hvx, relativeY = vy - contact.hvy;
+  const inward = relativeX * contact.nx + relativeY * contact.ny;
+  out.vx = vx; out.vy = vy;
+  if (inward < 0) {
+    out.vx = vx - (1 + restitution) * inward * contact.nx;
+    out.vy = vy - (1 + restitution) * inward * contact.ny;
+    const speed = Math.hypot(out.vx, out.vy);
+    if (speed > 1100) { out.vx *= 1100 / speed; out.vy *= 1100 / speed; }
+    return true;
+  }
+  return false;
+}
+
+// particles.mjs
+
+class ParticleSystem {
+  constructor(capacity = CONFIG.particleLimit, random = Math.random) {
+    this.capacity = capacity;
+    this.budget = capacity;
+    this.random = random;
+    for (const field of ['x', 'y', 'px', 'py', 'vx', 'vy', 'life', 'maxLife', 'size']) this[field] = new Float32Array(capacity);
+    this.kind = new Uint8Array(capacity);
+    this.color = new Uint8Array(capacity);
+    this.active = new Uint8Array(capacity);
+    this.free = new Int32Array(capacity);
+    this.contact = {};
+    this.reflected = {};
+    this.clear();
+  }
+  clear({ keepStats = false } = {}) {
+    this.active.fill(0);
+    for (let i = 0; i < this.capacity; i++) this.free[i] = i;
+    this.freeCount = this.capacity;
+    this.count = 0;
+    if (!keepStats) { this.peak = 0; this.collisions = 0; }
+    this.rainCarry = 0;
+    this.lastContact = null;
+  }
+  allocate() {
+    if (!this.freeCount || this.count >= this.budget) return -1;
+    const i = this.free[--this.freeCount];
+    this.active[i] = 1;
+    this.count++;
+    this.peak = Math.max(this.peak, this.count);
+    return i;
+  }
+  release(i) {
+    if (!this.active[i]) return;
+    this.active[i] = 0;
+    this.free[this.freeCount++] = i;
+    this.count--;
+  }
+  rain(dt, strength, width, height) {
+    this.rainCarry += dt * (45 + 85 * strength) * Math.min(1, width / 650);
+    const number = Math.min(16, Math.floor(this.rainCarry));
+    this.rainCarry -= number;
+    for (let n = 0; n < number; n++) {
+      const i = this.allocate();
+      if (i < 0) { this.rainCarry = 0; break; }
+      this.kind[i] = 0; this.color[i] = 2;
+      this.x[i] = this.random() * (width + 70); this.y[i] = -20 - this.random() * 45;
+      this.px[i] = this.x[i]; this.py[i] = this.y[i];
+      this.vx[i] = -35 - this.random() * 35; this.vy[i] = 420 + this.random() * 270;
+      this.life[i] = this.maxLife[i] = (height + 100) / this.vy[i] + 0.25;
+      this.size[i] = 0.7 + this.random() * 1.2;
+    }
+  }
+  burst(head, width, height) {
+    let x = width * 0.5, y = height * 0.22;
+    if (head?.valid) {
+      const distance = head.ry + 55;
+      x = head.cx + Math.sin(head.angle) * distance;
+      y = head.cy - Math.cos(head.angle) * distance;
+    }
+    x = clamp(x, 20, width - 20);
+    y = clamp(y, 12, height * 0.65);
+    // If the top is cropped, use an outside point beside the head.
+    if (head?.valid) {
+      const dx = x - head.cx, dy = y - head.cy, c = Math.cos(head.angle), s = Math.sin(head.angle);
+      if (((c * dx + s * dy) / (head.rx + 8)) ** 2 + ((-s * dx + c * dy) / (head.ry + 8)) ** 2 < 1.1) {
+        x = head.cx < width / 2 ? head.cx + head.rx + 30 : head.cx - head.rx - 30;
+        y = head.cy - head.ry * 0.6;
+      }
+    }
+    const amount = Math.min(230, Math.floor(this.budget * 0.45));
+    for (let n = 0; n < amount; n++) {
+      const i = this.allocate();
+      if (i < 0) break;
+      const angle = this.random() * Math.PI * 2;
+      const velocity = 45 + Math.sqrt(this.random()) * Math.min(310, width * 0.45);
+      this.kind[i] = 1; this.color[i] = Math.floor(this.random() * PALETTE.length);
+      this.x[i] = x; this.y[i] = y; this.px[i] = x; this.py[i] = y;
+      this.vx[i] = Math.cos(angle) * velocity; this.vy[i] = Math.sin(angle) * velocity - 85;
+      this.life[i] = this.maxLife[i] = 2.8 + this.random() * 1.4;
+      this.size[i] = 1.3 + this.random() * 1.7;
+    }
+    return { x, y };
+  }
+  step(dt, head, width, height) {
+    const drag = Math.exp(-0.35 * dt);
+    for (let i = 0; i < this.capacity; i++) {
+      if (!this.active[i]) continue;
+      this.life[i] -= dt;
+      if (this.life[i] <= 0 || this.y[i] > height + 100 || this.x[i] < -250 || this.x[i] > width + 250) { this.release(i); continue; }
+      this.px[i] = this.x[i]; this.py[i] = this.y[i];
+      if (this.kind[i]) { this.vx[i] *= drag; this.vy[i] = this.vy[i] * drag + CONFIG.gravity * dt; }
+      let nx = this.x[i] + this.vx[i] * dt, ny = this.y[i] + this.vy[i] * dt;
+      if (this.kind[i] && sweepEllipse(this.x[i], this.y[i], nx, ny, head, this.size[i], dt, this.contact)) {
+        const bounced = reflectVelocity(this.vx[i], this.vy[i], this.contact, CONFIG.restitution, this.reflected);
+        this.vx[i] = this.reflected.vx; this.vy[i] = this.reflected.vy;
+        const remaining = dt * (1 - this.contact.t);
+        nx = this.contact.x + this.vx[i] * remaining;
+        ny = this.contact.y + this.vy[i] * remaining;
+        if (bounced) {
+          this.collisions++;
+          // One reusable contact is enough for the optional visual debugging marker.
+          this.lastContact = this.contact;
+        }
+      }
+      this.x[i] = nx; this.y[i] = ny;
+    }
+  }
+}
+
+class ParticleRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: true });
+    this.glows = PALETTE.map(color => {
+      const sprite = document.createElement('canvas'); sprite.width = sprite.height = 48;
+      const context = sprite.getContext('2d');
+      const gradient = context.createRadialGradient(24, 24, 0, 24, 24, 24);
+      gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(0.12, color);
+      gradient.addColorStop(0.32, color + 'b0'); gradient.addColorStop(1, color + '00');
+      context.fillStyle = gradient; context.fillRect(0, 0, 48, 48);
+      return sprite;
+    });
+  }
+  resize(width, height, dpr) {
+    this.width = width; this.height = height; this.dpr = dpr;
+    this.canvas.width = Math.round(width * dpr); this.canvas.height = Math.round(height * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  draw(pool, head, { debug = false, preview = false, expression = 'idle', flash = null, now = 0 } = {}) {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.width, this.height);
+    if (preview && head.valid) this.drawAvatar(head, expression);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#c5f4f2';
+    for (let i = 0; i < pool.capacity; i++) {
+      if (!pool.active[i] || pool.kind[i]) continue;
+      ctx.globalAlpha = 0.32 + pool.size[i] * 0.15; ctx.lineWidth = pool.size[i];
+      ctx.beginPath(); ctx.moveTo(pool.x[i], pool.y[i]);
+      ctx.lineTo(pool.x[i] - pool.vx[i] * 0.035, pool.y[i] - pool.vy[i] * 0.035); ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < pool.capacity; i++) {
+      if (!pool.active[i] || !pool.kind[i]) continue;
+      ctx.globalAlpha = Math.min(1, pool.life[i] / 0.8);
+      ctx.strokeStyle = PALETTE[pool.color[i]]; ctx.lineWidth = pool.size[i] * 0.6;
+      ctx.beginPath(); ctx.moveTo(pool.x[i], pool.y[i]);
+      ctx.lineTo(pool.x[i] - pool.vx[i] * 0.025, pool.y[i] - pool.vy[i] * 0.025); ctx.stroke();
+      const size = pool.size[i] * 8;
+      ctx.drawImage(this.glows[pool.color[i]], pool.x[i] - size / 2, pool.y[i] - size / 2, size, size);
+    }
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    if (flash && now - flash.at < 650) {
+      const progress = (now - flash.at) / 650;
+      ctx.strokeStyle = `rgba(250,235,199,${0.45 * (1 - progress)})`; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(flash.x, flash.y, 10 + progress * 65, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (debug && head.valid) {
+      ctx.strokeStyle = '#a8f6d8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.ellipse(head.cx, head.cy, head.rx, head.ry, head.angle, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#a8f6d8'; ctx.font = '11px monospace';
+      ctx.fillText('2D HEAD COLLIDER', head.cx - 57, head.cy + head.ry + 22);
+      if (pool.lastContact) {
+        const p = pool.lastContact;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.nx * 25, p.y + p.ny * 25); ctx.stroke();
+      }
+    }
+  }
+  drawAvatar(head, expression) {
+    const ctx = this.ctx;
+    ctx.save(); ctx.translate(head.cx, head.cy); ctx.rotate(head.angle);
+    const { rx, ry } = head;
+    const gradient = ctx.createLinearGradient(-rx, -ry, rx, ry);
+    gradient.addColorStop(0, '#d3f8df'); gradient.addColorStop(1, '#81ccb9');
+    ctx.fillStyle = gradient; ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#173c38'; ctx.fillStyle = '#173c38'; ctx.lineWidth = Math.max(2, rx * 0.045); ctx.lineCap = 'round';
+    for (const side of [-1, 1]) {
+      const x = side * rx * 0.32;
+      ctx.beginPath();
+      if (expression === 'idle') ctx.ellipse(x, -ry * 0.13, rx * 0.045, ry * 0.065, 0, 0, Math.PI * 2);
+      else ctx.arc(x, -ry * 0.02, rx * 0.1, Math.PI * 1.15, Math.PI * 1.85);
+      if (expression === 'idle') ctx.fill(); else ctx.stroke();
+    }
+    ctx.beginPath();
+    if (expression === 'laugh') { ctx.ellipse(0, ry * 0.28, rx * 0.22, ry * 0.16, 0, 0, Math.PI * 2); ctx.fill(); }
+    else { ctx.arc(0, ry * 0.1, rx * (expression === 'smile' ? 0.3 : 0.19), 0.25, Math.PI - 0.25); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+
+// metrics.mjs
+class SampleWindow {
+  constructor(capacity = 450) { this.values = new Float64Array(capacity); this.index = 0; this.count = 0; }
+  add(value) { if (!Number.isFinite(value) || value < 0) return; this.values[this.index] = value; this.index = (this.index + 1) % this.values.length; this.count = Math.min(this.count + 1, this.values.length); }
+  percentile(p) { if (!this.count) return null; const values = Array.from(this.values.subarray(0, this.count)).sort((a, b) => a - b); return values[Math.min(values.length - 1, Math.ceil(p * values.length) - 1)]; }
+  reset() { this.index = this.count = 0; }
+}
+class Metrics {
+  constructor() { this.frames = new SampleWindow(); this.inference = new SampleWindow(); this.reset('idle'); }
+  reset(input) {
+    this.input = input; this.frames.reset(); this.inference.reset();
+    this.lastFrame = null; this.windowAt = null; this.frameCount = 0; this.inferCount = 0;
+    this.fps = null; this.hz = null; this.totalInferences = 0; this.inferenceErrors = 0;
+    this.startedAt = new Date().toISOString(); this.initMs = null; this.activeMs = 0;
+    this.samples = []; this.events = []; this.paused = false;
+  }
+  frame(now) {
+    if (this.windowAt === null) this.windowAt = now;
+    if (this.lastFrame !== null) { this.frames.add(now - this.lastFrame); this.activeMs += now - this.lastFrame; this.frameCount++; }
+    this.lastFrame = now;
+    const elapsed = now - this.windowAt;
+    if (elapsed >= 1000) {
+      this.fps = this.frameCount * 1000 / elapsed;
+      this.hz = this.inferCount * 1000 / elapsed;
+      this.frameCount = this.inferCount = 0; this.windowAt = now;
+    }
+  }
+  inferred(duration) { this.inference.add(duration); this.inferCount++; this.totalInferences++; }
+  pause() { this.paused = true; this.lastFrame = this.windowAt = null; this.frameCount = this.inferCount = 0; }
+  resume() { this.paused = false; }
+  event(type, detail = '') {
+    this.events.push({ at: new Date().toISOString(), input: this.input, type, detail });
+    if (this.events.length > 300) this.events.shift();
+  }
+  snapshot(extra = {}) {
+    return { elapsedSeconds: Number((this.activeMs / 1000).toFixed(2)), input: this.input,
+      fps: this.fps, detectionHz: this.input === 'camera' ? this.hz : null,
+      frameIntervalP95Ms: this.frames.percentile(0.95), inferenceP50Ms: this.inference.percentile(0.5),
+      inferenceP95Ms: this.inference.percentile(0.95), totalInferences: this.totalInferences,
+      inferenceErrors: this.inferenceErrors, ...extra };
+  }
+  record(extra) { this.samples.push(this.snapshot(extra)); if (this.samples.length > 600) this.samples.shift(); }
+}
+
+// CORE_END
+
+const $ = id => document.getElementById(id);
+const video = $('camera'), stage = $('stage'), canvas = $('effects');
+const machine = new ExpressionMachine();
+const pool = new ParticleSystem();
+const renderer = new ParticleRenderer(canvas);
+const metrics = new Metrics();
+const head = makeHead();
+let target = null, lastLandmarks = null, ovalIndices = [];
+let mode = 'idle', stream = null, model = null, modelModule = null, backend = null;
+let sessionToken = 0, frameHandle = null, lastFrameAt = null, lastDetectionAt = -Infinity;
+let lastVideoTime = -1, lastResultAt = null, lastUiAt = 0, lastRecordAt = 0, lastState = 'no-face';
+let width = 1, height = 1, mirrored = true, lowQuality = false, showCollider = false;
+let previewChoice = 'idle', previewX = 0.5, previewY = 0.55;
+let flash = null, priorCollisions = 0, collisionHighlightUntil = 0, lastBurstAt = -Infinity;
+let captureSettings = null, finalSnapshot = null, initialTime = null, missingOutput = false;
+let loadingTimer = null, dragging = false, consecutiveInferenceErrors = 0;
+let renderScheduleAt = null;
+
+function setMode(next) {
+  mode = next; stage.dataset.mode = next;
+  $('welcome').hidden = next !== 'idle';
+  $('loading').hidden = next !== 'loading';
+  $('preview-controls').hidden = next !== 'preview';
+  $('stage-hint').hidden = next === 'idle' || next === 'loading';
+  $('stop').hidden = next === 'idle';
+  $('input-label').textContent = { idle: '等待开启', loading: '正在准备', camera: '实时摄像头', preview: '效果预览 · 模拟输入' }[next];
+  $('start').disabled = next === 'loading';
+}
+function setSessionStatus(text, active = false) {
+  $('session-status').textContent = text;
+  $('session-dot').classList.toggle('muted-dot', !active);
+}
+function hideError() { $('error-panel').hidden = true; }
+function showError(title, copy) { $('error-title').textContent = title; $('error-copy').textContent = copy; $('error-panel').hidden = false; }
+function previewTarget() {
+  const rx = Math.min(width * 0.15, 105);
+  return { cx: previewX * width, cy: previewY * height, rx, ry: rx * 1.22, angle: (previewX - 0.5) * 0.3, valid: true };
+}
+function mapHead() {
+  if (!lastLandmarks || !video.videoWidth || !video.videoHeight) return null;
+  return estimateHead(lastLandmarks, ovalIndices, coverTransform(video.videoWidth, video.videoHeight, width, height, mirrored), CONFIG.headPadding);
+}
+function resize() {
+  const rect = stage.getBoundingClientRect();
+  width = rect.width; height = rect.height;
+  renderer.resize(width, height, Math.min(window.devicePixelRatio || 1, lowQuality ? 1 : 1.5));
+  pool.clear({ keepStats: true }); head.valid = false;
+  target = mode === 'preview' ? previewTarget() : mapHead();
+  if (target) followHead(head, target, 1 / 60);
+  renderer.draw(pool, head, { preview: mode === 'preview', expression: machine.state, debug: showCollider });
+}
+new ResizeObserver(resize).observe(stage);
+
+function snapshot() {
+  return { state: machine.state, particles: pool.count, peakParticles: pool.peak, collisionEvents: pool.collisions,
+    resultAgeMs: lastResultAt === null ? null : Math.max(0, performance.now() - lastResultAt),
+    quality: lowQuality ? 'low' : 'standard', backend, capture: captureSettings,
+    canvas: { width: Math.round(width), height: Math.round(height), pixelRatio: renderer.dpr }, hidden: document.hidden };
+}
+function resetSession(input) {
+  machine.lose(); machine.lastBurst = -Infinity;
+  pool.clear(); head.valid = false; target = null; lastLandmarks = null;
+  lastResultAt = null; lastVideoTime = -1; lastDetectionAt = -Infinity; lastFrameAt = null;
+  lastUiAt = lastRecordAt = 0; priorCollisions = 0; collisionHighlightUntil = 0;
+  flash = null; lastBurstAt = -Infinity; lastState = 'no-face'; finalSnapshot = null; missingOutput = false; consecutiveInferenceErrors = 0;
+  metrics.reset(input); $('export').disabled = false;
+}
+function cancelLoop() { if (frameHandle !== null) cancelAnimationFrame(frameHandle); frameHandle = null; lastFrameAt = null; renderScheduleAt = null; }
+function releaseHardware() {
+  if (stream) { for (const track of stream.getTracks()) track.stop(); stream = null; }
+  video.pause(); video.srcObject = null; delete video.dataset.ready;
+  if (model) { model.close(); model = null; }
+}
+function stopSession({ preserve = true } = {}) {
+  sessionToken++; clearTimeout(loadingTimer); cancelLoop();
+  if (preserve && metrics.input !== 'idle' && (mode === 'camera' || mode === 'preview')) {
+    metrics.record(snapshot()); metrics.event('stop'); finalSnapshot = metrics.snapshot(snapshot());
+  }
+  setMode('idle'); releaseHardware();
+  machine.lose(); target = null; lastLandmarks = null; head.valid = false; lastResultAt = null;
+  pool.clear(); renderer.draw(pool, head);
+  setSessionStatus(preserve && metrics.input !== 'idle' ? '体验已停止。可以重新开启，或导出本次记录。' : '准备好，制造一点小惊喜。');
+  updateUi(performance.now());
+}
+
+async function createModel(token) {
+  if (!modelModule) modelModule = await import(ASSETS.bundle);
+  const { FaceLandmarker, FilesetResolver } = modelModule;
+  const fileset = await FilesetResolver.forVisionTasks(ASSETS.wasm);
+  if (token !== sessionToken) return null;
+  const options = { baseOptions: { modelAssetPath: ASSETS.model, delegate: 'GPU' }, runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true,
+    minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 };
+  let instance;
+  try {
+    instance = await FaceLandmarker.createFromOptions(fileset, options);
+    backend = 'GPU';
+  } catch (error) {
+    if (token !== sessionToken) return null;
+    metrics.event('gpu-fallback', 'GPU 初始化失败，尝试 CPU');
+    options.baseOptions.delegate = 'CPU';
+    instance = await FaceLandmarker.createFromOptions(fileset, options);
+    backend = 'CPU';
+  }
+  if (token !== sessionToken) { instance.close(); return null; }
+  ovalIndices = indicesFromConnections(FaceLandmarker.FACE_LANDMARKS_FACE_OVAL);
+  return instance;
+}
+function waitForVideo(token) {
+  return new Promise((resolve, reject) => {
+    const started = performance.now();
+    function check() {
+      if (token !== sessionToken) return reject(new Error('cancelled'));
+      if (video.readyState >= 2 && video.videoWidth > 0) return resolve();
+      if (performance.now() - started > 12000) return reject(new Error('video-timeout'));
+      setTimeout(check, 80);
+    }
+    check();
+  });
+}
+async function startCamera() {
+  stopSession({ preserve: false }); hideError();
+  resetSession('camera'); captureSettings = null; backend = null;
+  const token = sessionToken;
+  initialTime = performance.now(); setMode('loading');
+  $('loading-title').textContent = '先和你的摄像头打个招呼';
+  $('loading-copy').textContent = '请允许使用摄像头。我们只在本地处理画面，不会录制或上传。';
+  setSessionStatus('等待摄像头授权…');
+  let phase = 'camera';
+  loadingTimer = setTimeout(() => {
+    if (token === sessionToken && mode === 'loading') $('loading-copy').textContent = phase === 'camera' ? '请查看浏览器的摄像头权限提示；也可以取消后重试。' : '首次模型加载可能稍慢，请保持页面打开。';
+  }, 12000);
+  try {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('insecure-context');
+    const acquired = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30, max: 30 } } });
+    if (token !== sessionToken) { acquired.getTracks().forEach(track => track.stop()); return; }
+    stream = acquired;
+    const track = stream.getVideoTracks()[0];
+    const settings = track.getSettings();
+    captureSettings = { width: settings.width, height: settings.height, frameRate: settings.frameRate, facingMode: settings.facingMode || 'unknown' };
+    track.addEventListener('ended', () => {
+      if (token !== sessionToken || mode === 'idle') return;
+      stopSession(); showError('摄像头已断开', '设备或系统停止了摄像头。请检查连接，然后重新开启。');
+    });
+    phase = 'playback'; video.srcObject = acquired; video.muted = true;
+    await video.play(); await waitForVideo(token);
+    if (token !== sessionToken) return;
+    video.dataset.ready = 'true'; phase = 'model';
+    $('loading-title').textContent = '正在认识你的笑容';
+    $('loading-copy').textContent = '正在加载本地识别模型，首次访问需要下载运行资源。';
+    setSessionStatus('摄像头已连接，正在加载识别模型…');
+    const instance = await createModel(token);
+    if (token !== sessionToken || !instance) return;
+    model = instance; clearTimeout(loadingTimer);
+    metrics.initMs = performance.now() - initialTime;
+    metrics.event('camera-ready', `MediaPipe ${MEDIAPIPE_VERSION}; ${backend}; main thread`);
+    setMode('camera'); resize(); updateUi(performance.now()); startLoop();
+  } catch (error) {
+    if (token !== sessionToken) return;
+    metrics.event('start-error', `${phase}: ${error.name || error.message}`);
+    stopSession({ preserve: false });
+    const name = error.name;
+    if (error.message === 'insecure-context') showError('请在安全链接中开启', '摄像头需要 HTTPS 或电脑上的 localhost。请使用完整浏览器打开正式链接。');
+    else if (phase === 'camera' && (name === 'NotAllowedError' || name === 'PermissionDeniedError')) showError('还没有获得摄像头权限', '在浏览器网站设置中允许摄像头，再点击“开启摄像头”。iPhone 建议使用 Safari 直接打开链接。');
+    else if (phase === 'camera' && name === 'NotFoundError') showError('没有找到摄像头', '请连接摄像头，或换一台带前置摄像头的设备。你也可以先看看效果预览。');
+    else if (phase === 'camera' && name === 'NotReadableError') showError('摄像头暂时无法使用', '它可能正被其他应用占用。关闭占用摄像头的程序，检查系统权限后重试。');
+    else if (phase === 'playback') showError('视频预览暂未启动', '浏览器可能暂停了视频播放。保持此页面在前台，再点击“开启摄像头”重试。');
+    else if (phase === 'model') showError('识别模型加载失败', '请检查网络后重试。摄像头已关闭；效果预览仍可使用。若问题持续，请导出记录用于排查。');
+    else showError('暂时无法开始', '请检查摄像头和浏览器权限后重试，或使用 Safari / Chrome 打开此页面。');
+  }
+}
+function startPreview() {
+  stopSession({ preserve: false }); hideError(); resetSession('preview');
+  backend = null; captureSettings = null; previewChoice = 'idle'; previewX = 0.5; previewY = 0.55;
+  setMode('preview'); resize();
+  document.querySelectorAll('[data-expression]').forEach(button => button.classList.toggle('selected', button.dataset.expression === 'idle'));
+  metrics.event('preview-start', 'Synthetic input. Not camera validation.');
+  updateUi(performance.now()); startLoop();
+}
+function detect(now) {
+  if (mode === 'preview') {
+    const values = previewChoice === 'laugh' ? { smile: 0.85, jaw: 0.8 } : previewChoice === 'smile' ? { smile: 0.72, jaw: 0.15 } : { smile: 0.05, jaw: 0.05 };
+    lastResultAt = now; target = previewTarget();
+    consume(machine.update(values, now), now);
+    return;
+  }
+  if (mode !== 'camera' || !model || video.readyState < 2 || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const started = performance.now();
+  try {
+    const result = model.detectForVideo(video, started);
+    consecutiveInferenceErrors = 0;
+    metrics.inferred(performance.now() - started);
+    lastResultAt = started;
+    const values = extractExpression(result);
+    missingOutput = !!result.faceLandmarks?.[0]?.length && !values;
+    if (!values) { lastLandmarks = null; target = null; head.valid = false; consume(machine.lose(), now); return; }
+    lastLandmarks = result.faceLandmarks[0]; target = mapHead();
+    if (!target) { consume(machine.lose(), now); head.valid = false; return; }
+    consume(machine.update(values, started), performance.now());
+  } catch (error) {
+    metrics.inferenceErrors++; metrics.event('inference-error', error.name || 'Error');
+    if (++consecutiveInferenceErrors >= 3) {
+      stopSession(); showError('识别暂时中断', '连续推理失败，已停止摄像头。请重新开启，或导出本次记录用于排查。');
+    }
+  }
+}
+function consume(result, now) {
+  if (result.state !== lastState) { metrics.event('expression', result.state); lastState = result.state; }
+  if (result.burst && target) {
+    const origin = pool.burst(head.valid ? head : target, width, height);
+    flash = { ...origin, at: now }; lastBurstAt = now;
+    metrics.event('firework', 'expression-entry');
+  }
+}
+function startLoop() {
+  if (frameHandle === null && !document.hidden && (mode === 'camera' || mode === 'preview')) frameHandle = requestAnimationFrame(tick);
+}
+function tick(now) {
+  frameHandle = null;
+  if (document.hidden || (mode !== 'camera' && mode !== 'preview')) return;
+  // rAF follows the screen refresh rate (e.g. 120 Hz); cap actual drawing work.
+  const renderInterval = 1000 / CONFIG.renderHz;
+  if (renderScheduleAt !== null) {
+    const elapsed = now - renderScheduleAt;
+    if (elapsed < renderInterval - 0.5) { startLoop(); return; }
+    renderScheduleAt += Math.max(1, Math.floor((elapsed + 0.5) / renderInterval)) * renderInterval;
+  } else renderScheduleAt = now;
+  metrics.frame(now);
+  const dt = lastFrameAt === null ? 1 / 60 : Math.min(0.05, Math.max(0.001, (now - lastFrameAt) / 1000));
+  lastFrameAt = now;
+  if (now - lastDetectionAt >= 1000 / CONFIG.detectionHz) { lastDetectionAt = now; detect(now); }
+  if (mode !== 'camera' && mode !== 'preview') return;
+  machine.expire(performance.now());
+  if (machine.state === 'no-face') { head.valid = false; target = null; }
+  const steps = Math.ceil(dt / (1 / 120)), step = dt / steps;
+  for (let n = 0; n < steps; n++) {
+    followHead(head, target, step);
+    if (machine.state === 'smile') pool.rain(step, machine.smile, width, height);
+    pool.step(step, head, width, height);
+  }
+  if (pool.collisions > priorCollisions) { collisionHighlightUntil = now + 500; priorCollisions = pool.collisions; }
+  renderer.draw(pool, head, { debug: showCollider, preview: mode === 'preview', expression: machine.state, flash, now });
+  if (now - lastUiAt >= 250) { updateUi(now); lastUiAt = now; }
+  if (now - lastRecordAt >= 1000) { metrics.record(snapshot()); lastRecordAt = now; }
+  startLoop();
+}
+const fmt = value => value === null || !Number.isFinite(value) ? '—' : value.toFixed(1);
+function updateUi(now) {
+  const active = mode === 'camera' || mode === 'preview';
+  const found = active && machine.state !== 'no-face';
+  let title = '等一张笑脸', copy = '找到光线明亮的位置，让整张脸进入画面。', hint = '看向镜头，试着微笑一下', symbol = '○';
+  if (active) {
+    if (!found) { title = '正在寻找你的笑脸'; hint = missingOutput ? '已找到脸，正在等待表情输出' : '让整张脸进入画面，靠近一点'; }
+    else if (machine.state === 'smile') { title = '一场微笑雨'; copy = '保持笑容，或者张嘴笑开，让烟花绽放。'; hint = '微笑雨来了 · 试着张嘴笑开'; symbol = '☂'; }
+    else if (machine.state === 'laugh') { title = '你的烟花时刻'; copy = '动动头接住火花；放松后再笑，可以再次绽放。'; hint = now - lastBurstAt < 2800 ? '动动头，接住落下的火花' : '放松一下，再次大笑就能绽放'; symbol = '✳'; }
+    else { title = '好天气，准备就绪'; copy = '先微笑一下，看看会发生什么。'; symbol = '◡'; }
+    if (mode === 'preview') hint = '模拟体验 · 拖动头像接火花';
+    setSessionStatus(mode === 'preview' ? '效果预览中 · 未使用摄像头' : found ? '已捕捉到你的表情 · 试着微笑或大笑' : missingOutput ? '已找到人脸，表情输出暂不可用' : '摄像头已开启 · 正在寻找人脸', found);
+  }
+  $('weather-title').textContent = title; $('weather-copy').textContent = copy; $('weather-symbol').textContent = symbol;
+  $('stage-hint-text').textContent = hint;
+  $('smile-fill').style.width = `${found ? Math.round(machine.smile * 100) : 0}%`;
+  $('expression-value').textContent = found ? machine.smile.toFixed(2) : '—';
+  $('expression-label').textContent = mode === 'preview' ? '笑容强度 · 模拟' : '笑容强度';
+  $('step-smile').classList.toggle('active', active && machine.state === 'smile');
+  $('step-laugh').classList.toggle('active', active && machine.state === 'laugh');
+  $('step-move').classList.toggle('active', active && collisionHighlightUntil > now);
+  const stats = !active && finalSnapshot ? finalSnapshot : metrics.snapshot(snapshot());
+  $('metric-fps').textContent = fmt(stats.fps); $('metric-hz').textContent = fmt(stats.detectionHz);
+  $('metric-infer').textContent = fmt(stats.inferenceP95Ms); $('metric-frame').textContent = fmt(stats.frameIntervalP95Ms);
+  $('metric-age').textContent = active && mode === 'camera' ? fmt(stats.resultAgeMs) : '—';
+  $('metric-particles').textContent = `${stats.particles || 0} / ${pool.budget}`;
+  $('metric-collisions').textContent = stats.collisionEvents || 0;
+  $('metric-state').textContent = active ? machine.state : 'stopped';
+  $('raw-smile').textContent = found ? machine.smile.toFixed(3) : '—'; $('raw-jaw').textContent = found ? machine.jaw.toFixed(3) : '—';
+  $('input-size').textContent = captureSettings ? `视频 ${captureSettings.width}×${captureSettings.height}` : mode === 'preview' ? '输入：模拟' : '视频 —';
+  $('diagnostic-note').textContent = metrics.input === 'idle' ? '尚未开启会话。预览数据与真实摄像头数据会分别标记。' :
+    `${metrics.input === 'camera' ? '真实摄像头' : '模拟输入（不作为摄像头验收）'} · ${backend || '无模型推理'} · ${active ? '运行中' : '已停止'} · 活跃时长 ${(metrics.activeMs / 1000).toFixed(0)}s · 最近最多 450 个样本的 P95`;
+}
+function exportReport() {
+  const report = { schema: 'smile-weather-session/v1', appVersion: VERSION, mediapipeVersion: MEDIAPIPE_VERSION,
+    exportedAt: new Date().toISOString(), startedAt: metrics.startedAt, input: metrics.input,
+    userAgent: navigator.userAgent, capture: captureSettings, backend, threading: 'main-thread-throttled',
+    settings: CONFIG, initMs: metrics.initMs, summary: finalSnapshot || metrics.snapshot(snapshot()),
+    samples: metrics.samples, events: metrics.events,
+    measurementNotes: ['Rendering FPS and inference frequency are distinct.', 'P95 uses up to the most recent 450 samples.',
+      'Result age starts when detectForVideo is called, not at sensor exposure.', 'Trigger accuracy and end-to-end expression latency require human evaluation.',
+      'Preview mode uses synthetic input and is not camera or model verification.', 'No images, video, landmarks or persistent face identifiers are included.'] };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
+  const link = document.createElement('a'); link.href = url; link.download = `smile-weather-${metrics.input}-${new Date().toISOString().replaceAll(':', '-')}.json`;
+  link.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+$('start').addEventListener('click', startCamera);
+$('preview').addEventListener('click', startPreview);
+$('stop').addEventListener('click', () => stopSession());
+$('cancel-start').addEventListener('click', () => stopSession());
+$('mirror').addEventListener('click', () => {
+  mirrored = !mirrored; video.style.transform = mirrored ? 'scaleX(-1)' : 'none';
+  $('mirror').setAttribute('aria-pressed', String(mirrored)); $('mirror').querySelector('span').textContent = mirrored ? '开' : '关';
+  head.valid = false; target = mode === 'preview' ? previewTarget() : mapHead(); metrics.event('mirror', String(mirrored));
+});
+$('quality').addEventListener('change', event => {
+  lowQuality = event.target.value === 'low'; pool.budget = lowQuality ? CONFIG.lowParticleLimit : CONFIG.particleLimit;
+  resize(); metrics.event('quality', event.target.value);
+});
+$('show-collider').addEventListener('change', event => { showCollider = event.target.checked; });
+$('export').addEventListener('click', exportReport);
+document.querySelectorAll('[data-expression]').forEach(button => button.addEventListener('click', () => {
+  if (mode !== 'preview') return;
+  previewChoice = button.dataset.expression;
+  document.querySelectorAll('[data-expression]').forEach(item => item.classList.toggle('selected', item === button));
+  metrics.event('synthetic-expression', previewChoice);
+}));
+canvas.addEventListener('pointerdown', event => {
+  if (mode !== 'preview') return;
+  dragging = true; canvas.setPointerCapture(event.pointerId); movePreview(event);
+});
+canvas.addEventListener('pointermove', event => { if (dragging && mode === 'preview') movePreview(event); });
+canvas.addEventListener('pointerup', () => { dragging = false; });
+canvas.addEventListener('pointercancel', () => { dragging = false; });
+function movePreview(event) {
+  const rect = canvas.getBoundingClientRect();
+  previewX = clamp((event.clientX - rect.left) / rect.width, 0.18, 0.82);
+  previewY = clamp((event.clientY - rect.top) / rect.height, 0.28, 0.76);
+  target = previewTarget();
+}
+canvas.addEventListener('keydown', event => {
+  if (mode !== 'preview' || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === 'ArrowLeft') previewX -= 0.035;
+  if (event.key === 'ArrowRight') previewX += 0.035;
+  if (event.key === 'ArrowUp') previewY -= 0.035;
+  if (event.key === 'ArrowDown') previewY += 0.035;
+  previewX = clamp(previewX, 0.18, 0.82); previewY = clamp(previewY, 0.28, 0.76); target = previewTarget();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    cancelLoop(); metrics.pause(); machine.lose(); target = null; head.valid = false;
+    if (stream) stream.getVideoTracks().forEach(track => { track.enabled = false; });
+    if (mode === 'camera' || mode === 'preview') metrics.event('hidden', 'rendering and inference paused');
+  } else {
+    if (stream) stream.getVideoTracks().forEach(track => { track.enabled = true; });
+    metrics.resume(); lastDetectionAt = -Infinity; lastVideoTime = -1;
+    if (mode === 'preview') target = previewTarget();
+    if (mode === 'camera' && video.paused) video.play().catch(() => { stopSession(); showError('预览已暂停', '浏览器暂停了视频，请点击“开启摄像头”恢复体验。'); });
+    startLoop();
+  }
+});
+window.addEventListener('pagehide', () => stopSession());
+setMode('idle'); resize(); updateUi(performance.now());
+
+</script>
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6Z"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M8 6 9.5 3h5L16 6h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24"><path d="M5 14a4 4 0 0 1-1-7.9A6 6 0 0 1 15.4 5 4.5 4.5 0 1 1 18 14H5ZM7 18l-1 3m6-3-1 3m6-3-1 3"/></symbol>
+    <symbol id="i-head" viewBox="0 0 24 24"><path d="M7 20v-3a8 8 0 1 1 13-6l2 3h-3v4h-4v3M3 8H1m2 4H1M8 8h.01M14 8h.01m-6 3c1 2 4 2 5 0"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  </defs></svg>
+  <div class="shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Smile Weather 首页"><span class="brand-mark"><svg><use href="#i-spark"/></svg></span><span>smile<span class="brand-light">weather</span><small>表情天气台</small></span></a>
+      <div class="header-note"><span class="tiny-dot"></span> A little expression. A little magic.</div>
+      <a class="header-link" href="#how-it-works">怎么玩 <span>↗</span></a>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">YOUR EXPRESSION, YOUR FORECAST</p><h1 id="page-title">今天的天气，<span>由你微笑决定。</span></h1></div>
+        <p class="intro-copy">微笑落雨，大笑绽放。<br>再用你的头，接住一场小小的烟花。</p>
+      </section>
+      <section class="workspace" aria-label="表情互动体验">
+        <div class="experience">
+          <div class="stage" id="stage" data-mode="idle">
+            <video id="camera" autoplay playsinline muted aria-label="摄像头实时预览"></video>
+            <div class="stage-wash"></div>
+            <canvas id="effects" tabindex="0" aria-label="互动特效画布；预览模式可拖动头像，或使用方向键移动"></canvas>
+            <div class="stage-top"><span id="input-badge" class="input-badge"><span class="status-dot"></span><span id="input-label">等待开启</span></span><span class="local-note"><svg><use href="#i-lock"/></svg> 浏览器本地处理</span></div>
+            <div class="welcome" id="welcome">
+              <div class="weather-art" aria-hidden="true">
+                <svg viewBox="0 0 330 225" xmlns="http://www.w3.org/2000/svg">
+                  <defs><linearGradient id="face-gradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e0ffe2"/><stop offset="1" stop-color="#95d9bd"/></linearGradient><linearGradient id="cloud-gradient" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#effafa"/><stop offset="1" stop-color="#afc8d3"/></linearGradient></defs>
+                  <ellipse cx="168" cy="202" rx="90" ry="8" fill="#101f28" opacity=".3"/>
+                  <g transform="rotate(-10 165 120)"><rect x="105" y="47" width="123" height="147" rx="60" fill="url(#face-gradient)"/><path d="M135 110q9-12 18 0m25 0q9-12 18 0M145 140q22 26 44 0" fill="none" stroke="#244c40" stroke-width="5" stroke-linecap="round"/><ellipse cx="128" cy="132" rx="10" ry="5" fill="#6da68a" opacity=".35"/><ellipse cx="202" cy="132" rx="10" ry="5" fill="#6da68a" opacity=".35"/></g>
+                  <g transform="translate(21 45) rotate(-8)"><path d="M15 45a18 18 0 0 1 1-36 25 25 0 0 1 46 5 17 17 0 1 1 0 34H15" fill="url(#cloud-gradient)"/><path d="m21 63-4 12m25-12-4 12m25-12-4 12" stroke="#bbdfdf" stroke-width="4" stroke-linecap="round"/></g>
+                  <g fill="#f5d28c"><path d="m267 50 5 15 16 5-16 5-5 16-5-16-15-5 15-5Z"/><path d="m244 123 3 8 9 3-9 3-3 9-3-9-8-3 8-3Z"/><circle cx="294" cy="107" r="3"/></g>
+                  <g stroke="#f5a8b7" stroke-width="2.5" stroke-linecap="round"><path d="m249 21-2-7m30 17 6-5m-16-8 2-7m21 36 8 1m-56-10-7-3"/></g><circle cx="73" cy="155" r="3" fill="#b7f0d2"/><path d="m82 179 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z" fill="#bcc4e3"/>
+                </svg>
+              </div>
+              <h2>给今天，一点好表情。</h2>
+              <p>打开摄像头，天气就会随你的笑容变化。</p>
+              <button class="button button-primary" id="start"><svg><use href="#i-camera"/></svg><span>开启摄像头</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
+              <button class="preview-link" id="preview">先看看效果 <span>↗</span></button>
+              <p class="privacy-note">不录制、不上传你的摄像头画面</p>
+            </div>
+            <div class="loading-overlay" id="loading" hidden><div class="spinner"></div><h2 id="loading-title">正在准备你的天气…</h2><p id="loading-copy">首次加载模型需要一点时间</p><button class="text-button" id="cancel-start">取消</button></div>
+            <div class="stage-hint" id="stage-hint" hidden><span id="stage-hint-text">看向镜头，试着微笑一下</span></div>
+            <div class="preview-controls" id="preview-controls" hidden><span>模拟输入</span><button data-expression="idle" class="selected">平静</button><button data-expression="smile">微笑</button><button data-expression="laugh">大笑</button></div>
+            <div class="stage-bottom" id="stage-bottom"><span class="stage-coordinate">EXPRESSION STUDIO / 01</span><span class="stage-spark">✳</span></div>
+          </div>
+          <div class="toolbar">
+            <div class="session-status" role="status" aria-live="polite"><span id="session-dot" class="tiny-dot muted-dot"></span><span id="session-status">准备好，制造一点小惊喜。</span></div>
+            <div class="toolbar-actions"><button id="mirror" class="quiet-button" aria-pressed="true" title="切换自拍镜像">镜像 <span>开</span></button><label class="quality-control"><span class="sr-only">画质</span><select id="quality" aria-label="画质"><option value="standard">标准画质</option><option value="low">轻量画质</option></select></label><button id="stop" class="quiet-button stop-button" hidden><svg><use href="#i-stop"/></svg>停止</button></div>
+          </div>
+          <div class="error-panel" id="error-panel" role="alert" hidden><span class="error-icon">!</span><div><strong id="error-title"></strong><p id="error-copy"></p></div></div>
+        </div>
+        <aside class="guide" id="how-it-works">
+          <div class="guide-heading"><span class="eyebrow">THREE LITTLE MOMENTS</span><h2>一张脸，三种惊喜。</h2><p>跟着做，让天气动起来。</p></div>
+          <div class="step-card" id="step-smile"><div class="step-icon rain-icon"><svg><use href="#i-rain"/></svg></div><div><div class="step-caption">01 / SMILE</div><h3>微笑，下点小雨</h3><p>保持笑容，细雨轻轻落下。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-laugh"><div class="step-icon firework-icon"><svg><use href="#i-spark"/></svg></div><div><div class="step-caption">02 / LAUGH</div><h3>大笑，点亮烟花</h3><p>张嘴笑开，一簇烟花绽放。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-move"><div class="step-icon move-icon"><svg><use href="#i-head"/></svg></div><div><div class="step-caption">03 / PLAY</div><h3>动动头，接住火花</h3><p>让落下的粒子在头顶弹跳。</p></div><span class="step-indicator"></span></div>
+          <div class="weather-status"><div class="weather-status-top"><span>此刻的天气</span><span id="weather-symbol">○</span></div><strong id="weather-title">等一张笑脸</strong><p id="weather-copy">找到光线明亮的位置，让整张脸进入画面。</p><div class="smile-meter" aria-hidden="true"><span id="smile-fill"></span></div><div class="weather-status-bottom"><span id="expression-label">笑容强度</span><span id="expression-value">—</span></div></div>
+          <div class="guide-footnote"><svg><use href="#i-lock"/></svg><p>你的笑容留在这里。<br>画面仅在当前浏览器中处理。</p></div>
+        </aside>
+      </section>
+      <details class="diagnostics" id="diagnostics"><summary><span><svg><use href="#i-sliders"/></svg>调试与性能</span><span class="summary-hint">查看真实运行数据 <span>＋</span></span></summary>
+        <div class="diagnostic-content">
+          <p class="diagnostic-note" id="diagnostic-note">尚未开启会话。预览数据与真实摄像头数据会分别标记。</p>
+          <div class="metrics-grid">
+            <div><span>渲染 FPS</span><strong id="metric-fps">—</strong></div><div><span>识别 Hz</span><strong id="metric-hz">—</strong></div><div><span>推理 P95 / ms</span><strong id="metric-infer">—</strong></div><div><span>帧间隔 P95 / ms</span><strong id="metric-frame">—</strong></div><div><span>结果年龄 / ms</span><strong id="metric-age">—</strong></div><div><span>活动粒子</span><strong id="metric-particles">0</strong></div><div><span>碰撞事件</span><strong id="metric-collisions">0</strong></div><div><span>表情状态</span><strong id="metric-state">no-face</strong></div>
+          </div>
+          <div class="debug-controls"><label><input type="checkbox" id="show-collider"> 显示头部边界与碰撞点</label><div class="raw-scores"><span>smile <b id="raw-smile">—</b></span><span>jawOpen <b id="raw-jaw">—</b></span><span id="input-size">视频 —</span></div><button class="quiet-button export-button" id="export" disabled>导出本次记录 ↓</button></div>
+          <p class="debug-explainer">表情系数不是识别准确率。数据在设备上测量，记录不含图像或面部关键点。当前采用主线程限频识别。</p>
+        </div>
+      </details>
+    </main>
+    <footer><span>MADE FOR A LITTLE JOY.</span><div><span>Smile Weather · v0.1</span><a href="https://smile-weather-studio.xjylance.chatgpt.site/about.html">实现与验收说明 ↗</a></div></footer>
+  </div>
+  <noscript><p class="noscript">需要启用 JavaScript 才能使用摄像头和互动特效。</p></noscript>
+</body>
+</html>
