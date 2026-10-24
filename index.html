@@ -17,11 +17,13 @@
 @media(max-width:360px){h1{font-size:28px}.stage{min-height:440px}.welcome h2{font-size:21px}.metrics-grid{grid-template-columns:repeat(2,1fr)}.step-card{padding:12px 8px}.step-card h3{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.button,.smile-meter span,.step-card{transition:none}.spinner{animation-duration:2s}}
 
+.stage #weather-poster { position: static; inset: auto; width: 100%; height: auto; display: block; pointer-events: none; }
+
 </style>
   <script type="module">
 // CORE_START
 // config.mjs
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 const MEDIAPIPE_VERSION = '0.10.35';
 const ASSETS = {
   bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',
@@ -255,7 +257,7 @@ class ParticleSystem {
     this.capacity = capacity;
     this.budget = capacity;
     this.random = random;
-    for (const field of ['x', 'y', 'px', 'py', 'vx', 'vy', 'life', 'maxLife', 'size']) this[field] = new Float32Array(capacity);
+    for (const field of ['x', 'y', 'px', 'py', 'vx', 'vy', 'life', 'maxLife', 'size', 'delay', 'impact', 'impactAngle']) this[field] = new Float32Array(capacity);
     this.kind = new Uint8Array(capacity);
     this.color = new Uint8Array(capacity);
     this.active = new Uint8Array(capacity);
@@ -264,6 +266,7 @@ class ParticleSystem {
     this.hitY = new Float32Array(24);
     this.hitLife = new Float32Array(24);
     this.hitCursor = 0;
+    this.anchor = {};
     this.contact = {};
     this.reflected = {};
     this.clear();
@@ -281,7 +284,7 @@ class ParticleSystem {
   allocate() {
     if (!this.freeCount || this.count >= this.budget) return -1;
     const i = this.free[--this.freeCount];
-    this.active[i] = 1;
+    this.active[i] = 1; this.delay[i] = 0; this.impact[i] = 0;
     this.count++;
     this.peak = Math.max(this.peak, this.count);
     return i;
@@ -292,19 +295,21 @@ class ParticleSystem {
     this.free[this.freeCount++] = i;
     this.count--;
   }
-  rain(dt, strength, width, height) {
-    this.rainCarry += dt * (22 + 42 * strength) * Math.min(1, width / 650);
+  rain(dt, strength, width, height, head = null) {
+    weatherAnchor(head, width, height, this.anchor);
+    this.rainCarry += dt * (16 + 26 * strength) * Math.min(1, width / 650);
     const number = Math.min(16, Math.floor(this.rainCarry));
     this.rainCarry -= number;
     for (let n = 0; n < number; n++) {
       const i = this.allocate();
       if (i < 0) { this.rainCarry = 0; break; }
       this.kind[i] = 0; this.color[i] = 0;
-      this.x[i] = this.random() * (width + 70); this.y[i] = -20 - this.random() * 45;
+      this.x[i] = this.anchor.x + (this.random() - 0.5) * this.anchor.w * 0.8;
+      this.y[i] = this.anchor.y + this.anchor.w * 0.15;
       this.px[i] = this.x[i]; this.py[i] = this.y[i];
-      this.vx[i] = -35 - this.random() * 35; this.vy[i] = 240 + this.random() * 170;
+      this.vx[i] = -12 + this.random() * 24; this.vy[i] = 190 + this.random() * 130;
       this.life[i] = this.maxLife[i] = (height + 100) / this.vy[i] + 0.25;
-      this.size[i] = 2.5 + this.random() * 2.1;
+      this.size[i] = (4.5 + this.random() * 3.5) * Math.min(1, width / 420);
     }
   }
   burst(head, width, height) {
@@ -324,17 +329,19 @@ class ParticleSystem {
         y = head.cy - head.ry * 0.6;
       }
     }
-    const amount = Math.min(128, Math.floor(this.budget * 0.32));
+    const amount = Math.min(104, Math.floor(this.budget * 0.26));
     for (let n = 0; n < amount; n++) {
       const i = this.allocate();
       if (i < 0) break;
-      const angle = this.random() * Math.PI * 2;
-      const velocity = 45 + Math.sqrt(this.random()) * Math.min(310, width * 0.45);
-      this.kind[i] = 1; this.color[i] = Math.floor(this.random() * PALETTE.length);
+      const hero = n < 8;
+      const angle = hero ? n / 8 * Math.PI * 2 + 0.15 : this.random() * Math.PI * 2;
+      const velocity = hero ? Math.min(130, width * 0.23) : 65 + Math.sqrt(this.random()) * Math.min(320, width * 0.48);
+      this.kind[i] = hero ? 2 : 1; this.color[i] = hero ? n % 4 : Math.floor(this.random() * PALETTE.length);
       this.x[i] = x; this.y[i] = y; this.px[i] = x; this.py[i] = y;
       this.vx[i] = Math.cos(angle) * velocity; this.vy[i] = Math.sin(angle) * velocity - 85;
-      this.life[i] = this.maxLife[i] = 2.8 + this.random() * 1.4;
-      this.size[i] = 3.5 + this.random() * 3.2;
+      this.delay[i] = 0.18;
+      this.life[i] = this.maxLife[i] = hero ? 4.2 : 2.4 + this.random() * 1.2;
+      this.size[i] = (hero ? 23 + this.random() * 10 : n < 32 ? 10 + this.random() * 7 : 3 + this.random() * 5) * Math.min(1, width / 480);
     }
     return { x, y };
   }
@@ -343,6 +350,8 @@ class ParticleSystem {
     for (let n = 0; n < this.hitLife.length; n++) this.hitLife[n] = Math.max(0, this.hitLife[n] - dt);
     for (let i = 0; i < this.capacity; i++) {
       if (!this.active[i]) continue;
+      this.impact[i] = Math.max(0, this.impact[i] - dt);
+      if (this.delay[i] > 0) { this.delay[i] = Math.max(0, this.delay[i] - dt); continue; }
       this.life[i] -= dt;
       if (this.life[i] <= 0 || this.y[i] > height + 100 || this.x[i] < -250 || this.x[i] > width + 250) { this.release(i); continue; }
       this.px[i] = this.x[i]; this.py[i] = this.y[i];
@@ -356,6 +365,7 @@ class ParticleSystem {
         ny = this.contact.y + this.vy[i] * remaining;
         if (bounced) {
           this.collisions++;
+          this.impact[i] = 0.28; this.impactAngle[i] = Math.atan2(this.contact.ny, this.contact.nx);
           const marker = this.hitCursor++ % this.hitLife.length;
           this.hitX[marker] = this.contact.x; this.hitY[marker] = this.contact.y;
           this.hitLife[marker] = 0.24;
@@ -368,36 +378,97 @@ class ParticleSystem {
   }
 }
 
-const AVATAR_LAYERS = [[7, -3, '#25f4ee'], [-6, 5, '#fe2c55'], [0, 0, '#f8f4f0']];
 
-// Small, pre-rendered stickers: no live blur, glow pass, or per-frame textures.
+
+// 2.5D artwork is rasterized once. Animation reuses these small canvases;
+// gradients, paths and shading never run once per particle per frame.
+function weatherAnchor(head, width, height, out) {
+  out.w = Math.min(230, width * 0.53);
+  out.x = clamp(head?.valid ? head.cx : width / 2, out.w * 0.52, width - out.w * 0.52);
+  out.y = clamp(head?.valid ? head.cy - head.ry - out.w * 0.28 : height * 0.18, out.w * 0.27 + 24, height * 0.45);
+  return out;
+}
+function tone(hex, amount) {
+  return '#' + [1, 3, 5].map(i => Math.round(clamp(parseInt(hex.slice(i, i + 2), 16) + amount, 0, 255)).toString(16).padStart(2, '0')).join('');
+}
+function starPath(c, shape) {
+  c.beginPath();
+  if (shape === 2) { c.roundRect(-11, -29, 22, 58, 10); return; }
+  const count = shape === 0 ? 10 : 8, outer = shape === 0 ? 46 : 40, inner = shape === 0 ? 24 : 11;
+  const points = Array.from({ length: count }, (_, i) => {
+    const a = -Math.PI / 2 + i * Math.PI * 2 / count, r = i % 2 ? inner : outer;
+    return [Math.cos(a) * r, Math.sin(a) * r];
+  });
+  for (let i = 0; i < count; i++) {
+    const a = points[i], b = points[(i + 1) % count];
+    const x = (a[0] + b[0]) / 2, y = (a[1] + b[1]) / 2;
+    if (!i) c.moveTo(x, y);
+    else c.quadraticCurveTo(a[0], a[1], x, y);
+  }
+  c.quadraticCurveTo(points[0][0], points[0][1], (points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2); c.closePath();
+}
 class ParticleRenderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d', { alpha: true });
+    this.anchor = {}; this.cloudAmount = 0; this.previousTime = null;
     this.stickers = PALETTE.map(color => [0, 1, 2].map(shape => {
-      const sprite = document.createElement('canvas'); sprite.width = sprite.height = 48;
-      const c = sprite.getContext('2d'); c.translate(24, 24);
-      c.fillStyle = color; c.strokeStyle = '#141416'; c.lineWidth = 2.5; c.lineJoin = 'round';
-      c.beginPath();
+      const sprite = document.createElement('canvas'); sprite.width = sprite.height = 128;
+      const c = sprite.getContext('2d'); c.translate(60, 58);
+      c.save(); c.translate(5, 9); starPath(c, shape); c.fillStyle = tone(color, -65); c.fill(); c.restore();
+      starPath(c, shape);
+      const g = c.createLinearGradient(-20, -40, 27, 46);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.23, tone(color, 42)); g.addColorStop(0.6, color); g.addColorStop(1, tone(color, -38));
+      c.fillStyle = g; c.fill(); c.strokeStyle = tone(color, 40); c.lineWidth = 1.5; c.stroke();
+      c.save(); c.clip();
+      const light = c.createRadialGradient(-13, -20, 0, -12, -20, 34);
+      light.addColorStop(0, '#ffffffb0'); light.addColorStop(1, '#ffffff00');
+      c.fillStyle = light; c.fillRect(-50, -50, 100, 100); c.restore();
+      c.strokeStyle = '#ffffffb0'; c.lineWidth = 3.5; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-8, -25); c.quadraticCurveTo(-3, -30, 0, -30); c.stroke();
       if (shape === 0) {
-        for (let j = 0; j < 10; j++) {
-          const a = -Math.PI / 2 + j * Math.PI / 5, r = j % 2 ? 8 : 20;
-          if (j) c.lineTo(Math.cos(a) * r, Math.sin(a) * r); else c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-        }
-        c.closePath();
-      } else if (shape === 1) {
-        c.moveTo(0, -21); c.quadraticCurveTo(5, -5, 21, 0); c.quadraticCurveTo(5, 5, 0, 21);
-        c.quadraticCurveTo(-5, 5, -21, 0); c.quadraticCurveTo(-5, -5, 0, -21); c.closePath();
-      } else c.roundRect(-7, -15, 14, 30, 5);
-      c.fill(); c.stroke();
+        c.fillStyle = '#301d47';
+        for (const x of [-8, 8]) { c.beginPath(); c.ellipse(x, 0, 2, 3, 0, 0, Math.PI * 2); c.fill(); }
+        c.strokeStyle = '#301d47'; c.lineWidth = 1.8; c.beginPath(); c.arc(0, 6, 4, 0.2, Math.PI - 0.2); c.stroke();
+      }
       return sprite;
     }));
-    this.drop = document.createElement('canvas'); this.drop.width = 32; this.drop.height = 48;
-    const c = this.drop.getContext('2d'); c.fillStyle = '#25f4ee'; c.strokeStyle = '#10292b'; c.lineWidth = 2;
-    c.beginPath(); c.moveTo(21, 3); c.bezierCurveTo(19, 15, 29, 25, 24, 36);
-    c.bezierCurveTo(17, 51, -1, 39, 7, 27); c.closePath(); c.fill(); c.stroke();
-    c.strokeStyle = '#eaffff'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(12, 29); c.lineTo(10, 33); c.stroke();
+    this.drop = document.createElement('canvas'); this.drop.width = 48; this.drop.height = 72;
+    const c = this.drop.getContext('2d');
+    c.beginPath(); c.moveTo(24, 3); c.bezierCurveTo(19, 19, 5, 33, 6, 46); c.bezierCurveTo(7, 72, 43, 73, 43, 46); c.bezierCurveTo(43, 31, 29, 15, 24, 3); c.closePath();
+    const g = c.createLinearGradient(8, 20, 43, 64); g.addColorStop(0, '#d0ffff'); g.addColorStop(.35, '#45f7f0'); g.addColorStop(.7, '#18c9e6'); g.addColorStop(1, '#438bdc');
+    c.fillStyle = g; c.fill(); c.strokeStyle = '#b2fffc'; c.lineWidth = 1.5; c.stroke();
+    c.strokeStyle = '#ffffffd0'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(15, 35); c.quadraticCurveTo(11, 42, 14, 47); c.stroke();
+    this.face = document.createElement('canvas'); this.face.width = 256; this.face.height = 320;
+    const f = this.face.getContext('2d');
+    const fg = f.createRadialGradient(90, 80, 12, 140, 168, 170);
+    fg.addColorStop(0, '#fffdf5'); fg.addColorStop(.55, '#fff1d9'); fg.addColorStop(.82, '#e8c7b3'); fg.addColorStop(1, '#bc8f9c');
+    f.fillStyle = fg; f.beginPath(); f.ellipse(128, 160, 127, 159, 0, 0, Math.PI*2); f.fill();
+    this.cloud = document.createElement('canvas'); this.cloud.width = 360; this.cloud.height = 220;
+    const q = this.cloud.getContext('2d');
+    const cloudPath = () => { q.beginPath(); q.moveTo(71, 173); q.bezierCurveTo(7, 172, 5, 91, 64, 86); q.bezierCurveTo(68, 31, 137, 14, 172, 54); q.bezierCurveTo(220, -5, 290, 36, 285, 88); q.bezierCurveTo(353, 88, 354, 171, 291, 173); q.closePath(); };
+    q.save(); q.translate(0, 10); cloudPath(); q.fillStyle = '#678bb8'; q.fill(); q.restore();
+    cloudPath(); const cg = q.createLinearGradient(0, 45, 0, 182); cg.addColorStop(0, '#fffdfd'); cg.addColorStop(.47, '#f1ffff'); cg.addColorStop(.76, '#cae9f5'); cg.addColorStop(1, '#a0bedf'); q.fillStyle = cg; q.fill();
+    q.save(); q.clip();
+    for (const [x,y,r] of [[114,69,51],[224,66,55],[63,122,39],[297,122,39]]) {
+      const h = q.createRadialGradient(x - 10, y - 12, 3, x, y, r); h.addColorStop(0, '#ffffffea'); h.addColorStop(1, '#ffffff00'); q.fillStyle = h; q.fillRect(x-r, y-r, r*2, r*2);
+    }
+    q.restore(); q.lineCap = 'round'; q.strokeStyle = '#34465b'; q.lineWidth = 5;
+    for (const x of [149, 208]) { q.beginPath(); q.arc(x, 123, 9, Math.PI * 1.15, Math.PI * 1.85); q.stroke(); }
+    q.beginPath(); q.arc(179, 127, 10, .15, Math.PI-.15); q.stroke();
+    q.fillStyle = '#ff9fb2'; for(const x of [131,226]) { q.beginPath(); q.ellipse(x,135,11,5,0,0,Math.PI*2); q.fill(); }
+  }
+  drawPoster(canvas) {
+    const original = this.ctx, c = canvas.getContext('2d');
+    c.clearRect(0, 0, canvas.width, canvas.height); c.save(); c.scale(2, 2);
+    this.ctx = c;
+    this.drawAvatar({ cx: 179, cy: 132, rx: 61, ry: 76, angle: -0.12 }, 'laugh');
+    c.drawImage(this.cloud, 22, 20, 157, 96);
+    for (const [x, y, size, color, angle] of [[282,77,90,1,.2],[275,178,55,0,-.25],[79,169,48,3,.3],[309,135,24,2,0]]) {
+      c.save(); c.translate(x,y); c.rotate(angle); c.drawImage(this.stickers[color][0],-size/2,-size/2,size,size); c.restore();
+    }
+    for (let i=0;i<3;i++) c.drawImage(this.drop, 54+i*27, 108+i%2*9, 13, 20);
+    c.restore(); this.ctx = original;
   }
   resize(width, height, dpr) {
     this.width = width; this.height = height; this.dpr = dpr;
@@ -407,45 +478,72 @@ class ParticleRenderer {
   draw(pool, head, { debug = false, preview = false, expression = 'idle', flash = null, now = 0 } = {}) {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.width, this.height);
+    const dt = this.previousTime === null ? 0 : Math.min(0.05, Math.max(0, (now - this.previousTime) / 1000));
+    this.previousTime = now;
+    this.cloudAmount += ((expression === 'smile' && head.valid ? 1 : 0) - this.cloudAmount) * (1 - Math.exp(-dt * 9));
     if (preview && head.valid) this.drawAvatar(head, expression);
-    for (let i = 0; i < pool.capacity; i++) {
-      if (!pool.active[i]) continue;
+    if (this.cloudAmount > 0.01) {
+      weatherAnchor(head, this.width, this.height, this.anchor);
+      const w = this.anchor.w * (0.8 + this.cloudAmount * 0.2);
+      const bob = Math.sin(now / 420) * 3;
+      ctx.globalAlpha = this.cloudAmount;
+      ctx.drawImage(this.cloud, this.anchor.x - w / 2, this.anchor.y - w * 0.31 + bob, w, w * 220 / 360);
+      ctx.globalAlpha = 1;
+    }
+    // Small confetti first; hero stars stay readable on top.
+    for (let layer = 0; layer < 2; layer++) for (let i = 0; i < pool.capacity; i++) {
+      if (!pool.active[i] || pool.delay[i] > 0 || (pool.kind[i] === 2 ? 1 : 0) !== layer) continue;
       if (!pool.kind[i]) {
-        ctx.globalAlpha = 0.5 + pool.size[i] * 0.09;
         const w = pool.size[i] * 2.4;
+        ctx.globalAlpha = Math.min(1, pool.life[i] / 0.25) * 0.9;
         ctx.drawImage(this.drop, pool.x[i] - w / 2, pool.y[i] - w * 0.75, w, w * 1.5);
       } else {
         const age = pool.maxLife[i] - pool.life[i];
-        const scale = Math.min(1, age / 0.09) * Math.min(1, pool.life[i] / 0.65);
-        const size = pool.size[i] * 2 * scale;
+        const scale = Math.min(1, age / 0.11) * Math.min(1, pool.life[i] / 0.65);
+        const size = pool.size[i] * 3.5 * scale;
+        const spin = i * 1.4 + age * (i % 2 ? 1.1 : -1.1);
         ctx.globalAlpha = Math.min(1, pool.life[i] / 0.45);
         ctx.save(); ctx.translate(pool.x[i], pool.y[i]);
-        ctx.rotate(i * 1.4 + age * (i % 2 ? 1.5 : -1.5));
-        ctx.drawImage(this.stickers[pool.color[i]][i % 3], -size / 2, -size / 2, size, size);
+        if (pool.impact[i] > 0) {
+          const phase = (0.28 - pool.impact[i]) / 0.28;
+          const squish = Math.sin(phase * Math.PI * 2) * 0.25 * (1 - phase);
+          ctx.rotate(pool.impactAngle[i]); ctx.scale(1 - squish, 1 + squish); ctx.rotate(-pool.impactAngle[i]);
+        }
+        ctx.rotate(spin);
+        // Gentle foreshortening gives a toy-like tumble without a 3D runtime.
+        ctx.scale(0.84 + Math.cos(age * 3 + i) * 0.16, 1);
+        ctx.drawImage(this.stickers[pool.color[i]][pool.kind[i] === 2 ? 0 : i % 3], -size / 2, -size / 2, size, size);
         ctx.restore();
       }
     }
     ctx.globalAlpha = 1;
-    // Bounded contact stickers make physical impact visible without extra physics particles.
     for (let n = 0; n < pool.hitLife.length; n++) {
       if (!pool.hitLife[n]) continue;
-      const remaining = pool.hitLife[n] / 0.24, size = 10 + (1 - remaining) * 16;
+      const remaining = pool.hitLife[n] / 0.24, size = 26 + (1 - remaining) * 34;
       ctx.globalAlpha = remaining;
       ctx.drawImage(this.stickers[2][1], pool.hitX[n] - size / 2, pool.hitY[n] - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
-    if (flash && now - flash.at < 650) {
-      const progress = Math.max(0, (now - flash.at) / 650), radius = 14 + progress * 72;
-      ctx.globalAlpha = 1 - progress; ctx.lineWidth = 3; ctx.lineCap = 'round';
-      for (let n = 0; n < 10; n++) {
-        const a = n * Math.PI / 5;
-        ctx.strokeStyle = n % 2 ? '#25f4ee' : '#fe2c55';
-        ctx.beginPath(); ctx.moveTo(flash.x + Math.cos(a) * radius, flash.y + Math.sin(a) * radius);
-        ctx.lineTo(flash.x + Math.cos(a) * (radius + 13), flash.y + Math.sin(a) * (radius + 13)); ctx.stroke();
+    if (flash && now - flash.at < 1000) {
+      const elapsed = Math.max(0, now - flash.at);
+      if (elapsed < 180) {
+        const t = elapsed / 180, size = 42 * (1 - t * 0.45);
+        ctx.save(); ctx.translate(flash.x, flash.y); ctx.rotate(t * Math.PI);
+        ctx.drawImage(this.stickers[2][0], -size / 2, -size / 2, size, size); ctx.restore();
+      } else {
+        const progress = (elapsed - 180) / 820, radius = 22 + progress * Math.min(165, this.width * 0.32);
+        ctx.globalAlpha = (1 - progress) ** 2; ctx.lineWidth = 4 * (1 - progress) + 1; ctx.lineCap = 'round';
+        for (let n = 0; n < 12; n++) {
+          const a = n * Math.PI / 6;
+          ctx.strokeStyle = n % 2 ? '#25f4ee' : '#fe2c55';
+          ctx.beginPath(); ctx.moveTo(flash.x + Math.cos(a) * radius, flash.y + Math.sin(a) * radius);
+          ctx.lineTo(flash.x + Math.cos(a) * (radius + 22), flash.y + Math.sin(a) * (radius + 22)); ctx.stroke();
+        }
+        ctx.save(); ctx.translate(clamp(flash.x, 80, this.width - 80), Math.max(72, flash.y - 30 - progress * 22)); ctx.rotate(-0.12);
+        ctx.scale(1 + Math.sin(Math.min(1, progress * 5) * Math.PI) * .18, 1);
+        ctx.font = '900 36px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 7; ctx.strokeStyle = '#59213e';
+        ctx.strokeText('YAY!', 0, 0); ctx.fillStyle = '#fff6fb'; ctx.fillText('YAY!', 0, 0); ctx.restore(); ctx.globalAlpha = 1;
       }
-      ctx.save(); ctx.translate(clamp(flash.x, 50, this.width - 50), Math.max(48, flash.y - 30 - progress * 18)); ctx.rotate(-0.12);
-      ctx.font = '900 26px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.strokeStyle = '#151517';
-      ctx.strokeText('YAY!', 0, 0); ctx.fillStyle = '#fff'; ctx.fillText('YAY!', 0, 0); ctx.restore(); ctx.globalAlpha = 1;
     }
     if (debug && head.valid) {
       ctx.strokeStyle = '#25f4ee'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
@@ -463,12 +561,8 @@ class ParticleRenderer {
     const ctx = this.ctx;
     ctx.save(); ctx.translate(head.cx, head.cy); ctx.rotate(head.angle);
     const { rx, ry } = head;
-    // The pale central face matches the collision ellipse; offset shapes are decorative.
-    for (const [dx, dy, color] of AVATAR_LAYERS) {
-      ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(dx, dy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.strokeStyle = '#171719'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+    // The pre-rendered toy face remains aligned with the physical ellipse.
+    ctx.drawImage(this.face, -rx, -ry, rx * 2, ry * 2);
     ctx.strokeStyle = '#171719'; ctx.fillStyle = '#171719'; ctx.lineWidth = Math.max(2, rx * 0.05); ctx.lineCap = 'round';
     for (const side of [-1, 1]) {
       const x = side * rx * 0.32;
@@ -539,6 +633,7 @@ const video = $('camera'), stage = $('stage'), canvas = $('effects');
 const machine = new ExpressionMachine();
 const pool = new ParticleSystem();
 const renderer = new ParticleRenderer(canvas);
+renderer.drawPoster($('weather-poster'));
 const metrics = new Metrics();
 const head = makeHead();
 let target = null, lastLandmarks = null, ovalIndices = [];
@@ -771,7 +866,7 @@ function tick(now) {
   const steps = Math.ceil(dt / (1 / 120)), step = dt / steps;
   for (let n = 0; n < steps; n++) {
     followHead(head, target, step);
-    if (machine.state === 'smile') pool.rain(step, machine.smile, width, height);
+    if (machine.state === 'smile') pool.rain(step, machine.smile, width, height, head);
     pool.step(step, head, width, height);
   }
   if (pool.collisions > priorCollisions) { collisionHighlightUntil = now + 500; priorCollisions = pool.collisions; }
@@ -916,14 +1011,9 @@ setMode('idle'); resize(); updateUi(performance.now());
             <canvas id="effects" tabindex="0" aria-label="互动特效画布；预览模式可拖动头像，或使用方向键移动"></canvas>
             <div class="stage-top"><span id="input-badge" class="input-badge"><span class="status-dot"></span><span id="input-label">等待开启</span></span><span class="local-note"><svg><use href="#i-lock"/></svg> 浏览器本地处理</span></div>
             <div class="welcome" id="welcome">
-              <div class="weather-art" aria-hidden="true"><svg viewBox="0 0 360 250" xmlns="http://www.w3.org/2000/svg">
-                <g transform="translate(105 37) rotate(-9 70 80)"><rect x="8" y="3" width="140" height="169" rx="65" fill="#25f4ee"/><rect x="-5" y="13" width="140" height="169" rx="65" fill="#fe2c55"/><rect width="140" height="169" rx="65" fill="#f8f4f0" stroke="#141416" stroke-width="4"/><path d="M33 69q10-18 21 0m33 0q10-18 21 0M43 102q27 35 54 0Z" fill="#171719" stroke="#171719" stroke-width="4" stroke-linecap="round"/><path d="M52 121q18-12 36 0" fill="none" stroke="#fe2c55" stroke-width="9"/><path d="M24 89h16m64 0h16" stroke="#fe2c55" stroke-width="5" stroke-linecap="round"/></g>
-                <g transform="translate(38 44) rotate(-14)"><path d="M4 21C-11 5 13-14 26 0 40-22 69-10 67 9c27-5 29 31 5 31H15Q-2 40 4 21Z" fill="#25f4ee" stroke="#141416" stroke-width="3"/><path d="m19 53-4 15m25-13-4 15m25-16-4 15" stroke="#25f4ee" stroke-width="7" stroke-linecap="round"/></g>
-                <g transform="translate(280 57) rotate(12)"><path d="m0-29 9 20 25 9-25 9L0 34-9 9-29 0-9-9Z" fill="#fe2c55" stroke="#141416" stroke-width="3"/></g>
-                <path d="m285 149 7 17 18 6-18 6-7 18-6-18-17-6 17-6Z" fill="#25f4ee"/><path d="m73 173 5 12 13 5-13 5-5 14-5-14-13-5 13-5Z" fill="#fff"/><g stroke="#fe2c55" stroke-width="5" stroke-linecap="round"><path d="m313 91 12-4m-20-52 6-10m-70 2-4-9m65 191 10 7"/></g><circle cx="98" cy="25" r="4" fill="#fff"/><circle cx="52" cy="144" r="4" fill="#fe2c55"/>
-              </svg></div>
+              <div class="weather-art" aria-hidden="true"><canvas id="weather-poster" width="720" height="500"></canvas></div>
               <h2>你的笑容，准备出镜。</h2>
-              <p>让雨滴、星芒和小惊喜，跟着表情一起动。</p>
+              <p>一朵软云，一场星星雨。快乐会弹回来。</p>
               <button class="button button-primary" id="start"><svg><use href="#i-camera"/></svg><span>开启摄像头</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
               <button class="preview-link" id="preview">试试模拟效果 <span>↗</span></button>
               <p class="privacy-note">不录制、不上传你的摄像头画面</p>
@@ -941,9 +1031,9 @@ setMode('idle'); resize(); updateUi(performance.now());
         </div>
         <aside class="guide" id="how-it-works">
           <div class="guide-heading"><span class="eyebrow">HOW TO PLAY</span><h2>三个动作，玩起来。</h2><p>从一个微笑开始。</p></div>
-          <div class="step-card" id="step-smile"><div class="step-icon rain-icon"><svg><use href="#i-rain"/></svg></div><div><div class="step-caption">01 / SMILE</div><h3>微笑，下点小雨</h3><p>保持微笑，青色雨滴从天而降。</p></div><span class="step-indicator"></span></div>
-          <div class="step-card" id="step-laugh"><div class="step-icon firework-icon"><svg><use href="#i-spark"/></svg></div><div><div class="step-caption">02 / LAUGH</div><h3>大笑，点亮烟花</h3><p>张嘴大笑，炸开一簇彩色星芒。</p></div><span class="step-indicator"></span></div>
-          <div class="step-card" id="step-move"><div class="step-icon move-icon"><svg><use href="#i-head"/></svg></div><div><div class="step-caption">03 / PLAY</div><h3>动动头，接住火花</h3><p>左右动头，把小星星弹回去。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-smile"><div class="step-icon rain-icon"><svg><use href="#i-rain"/></svg></div><div><div class="step-caption">01 / SMILE</div><h3>微笑，下点小雨</h3><p>保持微笑，让软绵绵的云下点雨。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-laugh"><div class="step-icon firework-icon"><svg><use href="#i-spark"/></svg></div><div><div class="step-caption">02 / LAUGH</div><h3>大笑，点亮烟花</h3><p>张嘴大笑，炸开一簇软糖星星。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-move"><div class="step-icon move-icon"><svg><use href="#i-head"/></svg></div><div><div class="step-caption">03 / PLAY</div><h3>动动头，接住火花</h3><p>左右动头，看星星碰一下、弹起来。</p></div><span class="step-indicator"></span></div>
           <div class="weather-status"><div class="weather-status-top"><span>表情实时反馈</span><span id="weather-symbol">○</span></div><strong id="weather-title">等一张笑脸</strong><p id="weather-copy">找到光线明亮的位置，让整张脸进入画面。</p><div class="smile-meter" aria-hidden="true"><span id="smile-fill"></span></div><div class="weather-status-bottom"><span id="expression-label">笑容强度</span><span id="expression-value">—</span></div></div>
           <div class="guide-footnote"><svg><use href="#i-lock"/></svg><p>你的笑容留在这里。<br>画面仅在当前浏览器中处理。</p></div>
         </aside>
@@ -959,7 +1049,7 @@ setMode('idle'); resize(); updateUi(performance.now());
         </div>
       </details>
     </main>
-    <footer><span>DESIGNED TO MAKE YOU SMILE.</span><div><span>Smile Weather · v0.2</span><a href="https://smile-weather-studio.xjylance.chatgpt.site/about.html">实现与验收说明 ↗</a></div></footer>
+    <footer><span>DESIGNED TO MAKE YOU SMILE.</span><div><span>Smile Weather · v0.3</span><a href="https://smile-weather-studio.xjylance.chatgpt.site/about.html">实现与验收说明 ↗</a></div></footer>
   </div></div>
   <noscript><p class="noscript">需要启用 JavaScript 才能使用摄像头和互动特效。</p></noscript>
 </body>
