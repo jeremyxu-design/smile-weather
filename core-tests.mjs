@@ -132,3 +132,26 @@ test('collision feedback uses a bounded reusable marker pool and expires', () =>
   assert.ok(p.hitLife.every(life => life === 0));
   p.clear(); assert.deepEqual([p.hitX, p.hitY, p.hitLife], buffers);
 });
+
+test('anticipation freezes particles briefly, then releases bounded hero stars', () => {
+  const p = new ParticleSystem(800, () => .5);
+  p.burst(null, 800, 600);
+  assert.equal(p.count, 104);
+  assert.equal(p.kind.filter((kind, i) => p.active[i] && kind === 2).length, 8);
+  const i = p.active.findIndex(Boolean), x = p.x[i], y = p.y[i];
+  p.step(.1, null, 800, 600); near(p.x[i], x); near(p.y[i], y);
+  p.step(.1, null, 800, 600); p.step(.02, null, 800, 600);
+  assert.ok(p.x[i] !== x || p.y[i] !== y);
+  p.impact[i] = .28; p.release(i); const reused = p.allocate();
+  assert.equal(reused, i); assert.equal(p.impact[i], 0); assert.equal(p.delay[i], 0);
+});
+test('rain originates near tracked cloud and stays on narrow screens', () => {
+  const p = new ParticleSystem(80, () => .5);
+  const h = { ...makeHead(), cx: 300, cy: 230, rx: 45, ry: 60, valid: true };
+  p.rain(.5, .8, 320, 600, h);
+  assert.ok(p.count > 0);
+  for (let i = 0; i < p.capacity; i++) if (p.active[i]) {
+    assert.ok(p.x[i] > 160 && p.x[i] < 320);
+    assert.ok(p.y[i] > 30 && p.y[i] < h.cy);
+  }
+});
