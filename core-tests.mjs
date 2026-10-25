@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 const source = readFileSync(new URL('./index.html', import.meta.url), 'utf8').split('// CORE_START\n')[1].split('// CORE_END')[0];
-const {CONFIG, ExpressionMachine, extractExpression, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, Metrics} = await import('data:text/javascript,' + encodeURIComponent(source + '\nexport {CONFIG, ExpressionMachine, extractExpression, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, Metrics};'));
+const {CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics} = await import('data:text/javascript,' + encodeURIComponent(source + '\nexport {CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics};'));
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -138,7 +138,7 @@ test('anticipation freezes particles briefly, then releases bounded hero stars',
   p.burst(null, 800, 600);
   assert.equal(p.count, 104);
   assert.equal(p.kind.filter((kind, i) => p.active[i] && kind === 2).length, 8);
-  const i = p.active.findIndex(Boolean), x = p.x[i], y = p.y[i];
+  const i = p.kind.findIndex((kind, index) => p.active[index] && kind === 2), x = p.x[i], y = p.y[i];
   p.step(.1, null, 800, 600); near(p.x[i], x); near(p.y[i], y);
   p.step(.1, null, 800, 600); p.step(.02, null, 800, 600);
   assert.ok(p.x[i] !== x || p.y[i] !== y);
@@ -154,4 +154,90 @@ test('rain originates near tracked cloud and stays on narrow screens', () => {
     assert.ok(p.x[i] > 160 && p.x[i] < 320);
     assert.ok(p.y[i] > 30 && p.y[i] < h.cy);
   }
+});
+
+test('single missing detection after cooldown preserves laugh and never re-fires', () => {
+  const m = fresh(); let bursts = 0;
+  for (let t = 0; t <= 2000; t += 50) bursts += Number(m.update(sample(.8, .8), t).burst);
+  m.miss(2050); assert.equal(m.state, 'laugh'); assert.equal(m.tracking, false);
+  for (let t = 2100; t <= 2600; t += 50) bursts += Number(m.update(sample(.8, .8), t).burst);
+  assert.equal(bursts, 1); assert.equal(m.tracking, true);
+  hold(m, sample(.1), 2650, 2950);
+  assert.equal(hold(m, sample(.8, .8), 3000, 3300).burst, true);
+});
+test('missing frames cannot complete pending entrance or exit dwell', () => {
+  const m = fresh(); hold(m, sample(.8, .8), 0, 200); m.miss(250);
+  assert.equal(m.update(sample(.8, .8), 550).burst, false);
+  assert.equal(hold(m, sample(.8, .8), 600, 850).burst, true);
+  hold(m, sample(.1), 900, 1100); m.miss(1150);
+  assert.equal(m.update(sample(.1), 1400).state, 'laugh');
+  assert.equal(hold(m, sample(.1), 1450, 1700).state, 'idle');
+});
+test('grace period uses last valid sample, repeated misses cannot extend it', () => {
+  const m = fresh(); hold(m, sample(.8), 0, 300);
+  for (let t = 350; t <= 750; t += 50) m.miss(t);
+  assert.equal(m.state, 'smile'); assert.equal(m.tracking, false);
+  m.miss(751); assert.equal(m.state, 'no-face');
+  assert.equal(m.update(sample(.8), 800).state, 'idle');
+  assert.equal(hold(m, sample(.8), 850, 1100).state, 'smile');
+});
+test('deadline cadence stays near 15 Hz on jittering refresh rates and never catches up', () => {
+  for (const hz of [30, 60, 120]) {
+    const clock = new DetectionClock(15); let count = 0;
+    for (let frame = 0; frame < hz * 10; frame++) {
+      const now = frame * 1000 / hz + (frame % 2 ? .3 : -.3);
+      count += Number(clock.due(now));
+    }
+    assert.ok(count >= 149 && count <= 151, `${hz} Hz: ${count}`);
+    assert.equal(clock.due(20000), true); assert.equal(clock.due(20000), false); assert.equal(clock.due(20001), false);
+    clock.reset(); assert.equal(clock.due(0), true);
+  }
+});
+test('rain is suspended immediately without a valid head', () => {
+  const p = new ParticleSystem(80);
+  p.rain(.5, 1, 600, 600, null); assert.equal(p.count, 0);
+  p.rain(.5, 1, 600, 600, { valid:false }); assert.equal(p.count, 0);
+});
+test('rain crossing head is consumed into bounded splashes; stale head has no collision', () => {
+  const p = new ParticleSystem(80), h = { ...makeHead(), cx:100, cy:100, rx:30, ry:50, valid:true };
+  const arrays = [p.splashX,p.splashLife];
+  const spawn = () => { const i=p.allocate(); p.kind[i]=0;p.x[i]=100;p.y[i]=0;p.vx[i]=0;p.vy[i]=700;p.life[i]=2;p.size[i]=5;return i; };
+  for(let n=0;n<100;n++) {const i=spawn();p.step(.1,h,600,600);assert.equal(p.active[i],0);}
+  assert.equal(p.splashes,100); assert.equal(p.splashLife.length,32); assert.equal(p.collisions,0);
+  p.step(.4,null,600,600);assert.ok(p.splashLife.every(v=>v===0));
+  const i=spawn();p.step(.1,{...h,valid:false},600,600);assert.equal(p.active[i],1);assert.equal(p.splashes,100);
+  p.clear();assert.deepEqual([p.splashX,p.splashLife],arrays);
+});
+test('only middle depth stars collide; rear and foreground decoration pass through', () => {
+  const p=new ParticleSystem(80),h={...makeHead(),cx:100,cy:100,rx:30,ry:50,valid:true};const ids=[];
+  for(let layer=0;layer<3;layer++){const i=p.allocate();ids.push(i);p.kind[i]=1;p.depth[i]=layer;p.x[i]=100;p.y[i]=0;p.vx[i]=0;p.vy[i]=700;p.life[i]=2;p.size[i]=5;}
+  p.step(.1,h,600,600);assert.ok(p.vy[ids[0]]>0);assert.ok(p.vy[ids[1]]<0);assert.ok(p.vy[ids[2]]>0);
+});
+test('three waves release in order and entry overshoot settles to one', () => {
+  const p=new ParticleSystem(800,()=>.5);p.burst(null,800,600);
+  const started=()=>Array.from(p.active).reduce((n,a,i)=>n+Number(a&&p.life[i]<p.maxLife[i]),0);
+  for(let n=0;n<21;n++)p.step(.01,null,800,600);assert.equal(started(),8);
+  for(let n=0;n<8;n++)p.step(.01,null,800,600);assert.equal(started(),32);
+  for(let n=0;n<8;n++)p.step(.01,null,800,600);assert.equal(started(),104);
+  near(popScale(0),0);assert.ok(popScale(.2)>1);near(popScale(.3),1);near(popScale(1),1);
+});
+test('renderer initializes without roundRect and masks only rear particles before front drawing', () => {
+  const original=globalThis.document, events=[]; let rendering=false;
+  const makeContext = () => {
+    const c={ globalAlpha:1,globalCompositeOperation:'source-over' };
+    for(const key of ['translate','rotate','scale','moveTo','lineTo','quadraticCurveTo','bezierCurveTo','closePath','stroke','beginPath','ellipse','arc','fillRect','clearRect','setTransform','setLineDash','strokeText','fillText','clip']) c[key]=()=>{};
+    const stack=[];c.save=()=>stack.push(c.globalCompositeOperation);c.restore=()=>{c.globalCompositeOperation=stack.pop()};
+    c.fill=()=>{if(rendering)events.push(c.globalCompositeOperation)};
+    c.drawImage=img=>{if(rendering)events.push(img)};
+    c.createLinearGradient=c.createRadialGradient=()=>{assert.equal(rendering,false,'no per-frame gradients');return{addColorStop(){}}};
+    return c;
+  };
+  globalThis.document={createElement:()=>({getContext:()=>makeContext()})};
+  try {
+    const ctx=makeContext(), renderer=new ParticleRenderer({getContext:()=>ctx});renderer.resize(400,400,1);
+    const p=new ParticleSystem(3);
+    for(let layer=0;layer<3;layer++){const i=p.allocate();p.depth[i]=layer;p.kind[i]=2;p.color[i]=layer;p.size[i]=10;p.life[i]=2;p.maxLife[i]=3;p.x[i]=p.y[i]=200;}
+    rendering=true;renderer.draw(p,{...makeHead(),valid:true,cx:200,cy:200,rx:50,ry:60},{now:1000});
+    assert.deepEqual(events,[renderer.stickers[0][0],'destination-out',renderer.stickers[1][0],renderer.stickers[2][0]]);
+  } finally {globalThis.document=original;}
 });
