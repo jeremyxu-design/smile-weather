@@ -241,3 +241,35 @@ test('renderer initializes without roundRect and masks only rear particles befor
     assert.deepEqual(events,[renderer.stickers[0][0],'destination-out',renderer.stickers[1][0],renderer.stickers[2][0]]);
   } finally {globalThis.document=original;}
 });
+
+test('laugh exit requires a fresh 300 ms smile without returning to neutral', () => {
+  for (const step of [50, 100, 150]) {
+    const m = fresh(); hold(m, sample(.8, .8), 0, 300, step);
+    const start = 300 + step, exit = start + 300;
+    hold(m, sample(.7, .1), start, exit, step);
+    assert.equal(m.state, 'idle');
+    assert.equal(m.smileLatch.pendingAt, exit);
+    for (let t = exit + step; t < exit + 300; t += step) assert.equal(m.update(sample(.7, .1), t).state, 'idle');
+    assert.equal(m.update(sample(.7, .1), exit + 300).state, 'smile');
+  }
+});
+test('brief residual smile after laugh never starts rain', () => {
+  const m = fresh(); hold(m, sample(.8, .8), 0, 300);
+  hold(m, sample(.7), 350, 650); assert.equal(m.state, 'idle');
+  hold(m, sample(.7), 700, 850); assert.equal(m.state, 'idle');
+  hold(m, sample(.1), 900, 1300); assert.equal(m.state, 'idle');
+  // A residual score in the old hysteresis band cannot inherit smile either.
+  hold(m, sample(.8, .8), 1350, 1650);
+  hold(m, sample(.3), 1700, 2600); assert.equal(m.state, 'idle');
+});
+test('missing input restarts post-laugh smile confirmation; renewed laugh retains priority', () => {
+  const m = fresh(); hold(m, sample(.8, .8), 0, 300);
+  hold(m, sample(.7), 350, 850); m.miss(900);
+  assert.equal(m.update(sample(.7), 950).state, 'idle');
+  hold(m, sample(.7), 1000, 1200); assert.equal(m.state, 'idle');
+  assert.equal(m.update(sample(.7), 1250).state, 'smile');
+  hold(m, sample(.8, .8), 1300, 1600);
+  hold(m, sample(.7), 1650, 1950); assert.equal(m.state, 'idle');
+  const result = hold(m, sample(.8, .8), 2000, 2300);
+  assert.equal(result.state, 'laugh'); assert.equal(result.burst, true);
+});
