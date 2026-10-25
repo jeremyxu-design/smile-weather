@@ -72,7 +72,7 @@
   <script type="module">
 // CORE_START
 // config.mjs
-const VERSION = '0.4.0';
+const VERSION = '0.4.1';
 const MEDIAPIPE_VERSION = '0.10.35';
 const ASSETS = {
   bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',
@@ -174,12 +174,15 @@ class ExpressionMachine {
     this.jaw += (sample.jaw - this.jaw) * alpha;
     this.lastSample = now;
     const before = this.state;
-    this.smileLatch.update(this.smile >= c.smileEnter, this.smile <= c.smileExit, now, c.dwellMs);
     this.laughLatch.update(
       this.smile >= c.laughSmileEnter && this.jaw >= c.jawEnter,
       this.smile <= c.laughSmileExit || this.jaw <= c.jawExit,
       now, c.dwellMs,
     );
+    // Laugh also satisfies smile. Discard that inherited latch on confirmed
+    // laugh exit, then require fresh smile evidence; neutral is not required.
+    if (before === 'laugh' && !this.laughLatch.on) this.smileLatch.reset();
+    this.smileLatch.update(this.smile >= c.smileEnter, this.smile <= c.smileExit, now, c.dwellMs);
     this.state = this.laughLatch.on ? 'laugh' : this.smileLatch.on ? 'smile' : 'idle';
     const burst = this.state === 'laugh' && before !== 'laugh' && now - this.lastBurst >= c.cooldownMs;
     if (burst) this.lastBurst = now;
@@ -1193,7 +1196,7 @@ setMode('idle'); resize(); updateUi(performance.now());
         </div>
       </details>
     </main>
-    <footer><span>DESIGNED TO MAKE YOU SMILE.</span><div><span>Smile Weather · v0.4</span><a href="https://smile-weather-studio.xjylance.chatgpt.site/about.html">实现与验收说明 ↗</a></div></footer>
+    <footer><span>DESIGNED TO MAKE YOU SMILE.</span><div><span>Smile Weather · v0.4.1</span><a href="https://smile-weather-studio.xjylance.chatgpt.site/about.html">实现与验收说明 ↗</a></div></footer>
   </div></div>
   <noscript><p class="noscript">需要启用 JavaScript 才能使用摄像头和互动特效。</p></noscript>
 </body>
