@@ -273,3 +273,20 @@ test('missing input restarts post-laugh smile confirmation; renewed laugh retain
   const result = hold(m, sample(.8, .8), 2000, 2300);
   assert.equal(result.state, 'laugh'); assert.equal(result.burst, true);
 });
+
+
+test('hero stars start separated inside the stage, with matching previous positions', () => {
+  for (const width of [320, 390, 600]) {
+    const pool = new ParticleSystem(800, () => .5);
+    pool.burst({ ...makeHead(), valid:true, cx:width / 2, cy:60, rx:50, ry:65, angle:0 }, width, 568);
+    const positions = new Set(); let heroes = 0;
+    for (let i=0;i<pool.capacity;i++) {
+      if (!pool.active[i] || pool.kind[i] !== 2) continue;
+      heroes++; positions.add(`${pool.x[i]},${pool.y[i]}`);
+      assert.ok(pool.x[i]>=8 && pool.x[i]<=width-8 && pool.y[i]>=8 && pool.y[i]<=560);
+      near(pool.x[i],pool.px[i]); near(pool.y[i],pool.py[i]);
+      assert.equal(pool.depth[i],1);
+    }
+    assert.equal(heroes,8); assert.equal(positions.size,8); assert.equal(pool.count,104);
+  }
+});

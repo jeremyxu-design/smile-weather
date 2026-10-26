@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e10">
+  <meta name="description" content="微笑落雨，大笑绽放。一个在浏览器本地运行、让烟花与头部碰撞的表情互动实验。">
+  <title>Smile Weather · 表情天气台</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=0.5.1">
+  <script type="module" src="./app.mjs?v=0.5.1"></script>
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6Z"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M8 6 9.5 3h5L16 6h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24"><path d="M5 14a4 4 0 0 1-1-7.9A6 6 0 0 1 15.4 5 4.5 4.5 0 1 1 18 14H5ZM7 18l-1 3m6-3-1 3m6-3-1 3"/></symbol>
+    <symbol id="i-head" viewBox="0 0 24 24"><path d="M7 20v-3a8 8 0 1 1 13-6l2 3h-3v4h-4v3M3 8H1m2 4H1M8 8h.01M14 8h.01m-6 3c1 2 4 2 5 0"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  </defs></svg>
+<header class="desktop-header"><a class="brand" href="./"><span>✳</span> Smile Weather</a><span>LIVE EFFECTS / EXPERIMENT 01</span><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">查看源码 ↗</a></header>
+<main class="live-layout">
+  <section class="desktop-intro" aria-labelledby="page-title"><p class="eyebrow"><i></i> A LITTLE WEATHER. A LOT OF JOY.</p><h1 id="page-title">让笑容，<br>占满<span>屏幕。</span></h1><p class="intro-copy">微笑，是一场雨。<br>大笑，是一场星星烟花。<br>动动头，让快乐弹回来。</p><div class="intro-rule"></div><p class="intro-label">你的直播间 · 你的表情特效</p><p class="fine-print">独立 AR 概念原型<br>非 TikTok 官方产品，不进行真实直播。</p><a class="about-link" href="./about.html">看看它如何工作 <span>↗</span></a></section>
+  <section class="phone" aria-label="竖屏模拟直播间">
+    <div class="stage" id="stage" data-mode="idle">
+      <video id="camera" autoplay playsinline muted aria-label="摄像头实时预览"></video><div class="stage-wash"></div><canvas id="effects" tabindex="0" aria-label="互动特效画布；预览模式可拖动头像，或使用方向键移动"></canvas>
+      <div class="live-header"><div class="host"><span class="host-avatar">S<span>✳</span></span><div><strong>Smile Weather</strong><span>今天也要笑一下</span></div></div><span class="live-badge"><i></i>模拟直播</span><button class="icon-button" id="open-tools" aria-label="打开直播工具" aria-expanded="false" aria-controls="tools-panel"><svg><use href="#i-sliders"/></svg></button></div>
+      <div class="live-meta"><span class="local-note"><svg><use href="#i-lock"/></svg>仅本机可见</span><span id="input-badge" class="input-badge"><i class="status-dot"></i><span id="input-label">等待开启</span></span></div>
+      <button class="effect-chip" id="open-guide" aria-label="查看表情玩法"><span class="effect-icon">✳</span><span><small>表情天气</small><strong id="live-effect-name">微笑，给直播加点天气</strong></span><span class="chip-arrow">›</span></button>
+            <div class="welcome" id="welcome">
+              <div class="weather-art" aria-hidden="true"><canvas id="weather-poster" width="720" height="500"></canvas></div>
+              <h2>今晚，笑着开场。</h2>
+              <p>你的表情，就是这场直播的特效开关。</p>
+              <button class="button button-primary" id="start"><svg><use href="#i-camera"/></svg><span>开启摄像头</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
+              <button class="preview-link" id="preview">试试模拟效果 <span>↗</span></button>
+              <p class="privacy-note">不录制、不上传你的摄像头画面</p>
+            </div>
+
+      <div class="loading-overlay" id="loading" hidden><div class="spinner"></div><h2 id="loading-title">正在准备你的天气…</h2><p id="loading-copy">首次加载模型需要一点时间</p><button class="text-button" id="cancel-start">取消</button></div>
+      <div class="stage-hint" id="stage-hint" hidden><span id="stage-hint-text">看向镜头，试着微笑一下</span></div>
+      <div class="preview-controls" id="preview-controls" hidden><span>模拟</span><button data-expression="idle" class="selected">平静</button><button data-expression="smile">微笑</button><button data-expression="laugh">大笑</button></div>
+      <div class="audience-layer" aria-label="示例评论，并非真实观众"><span class="sample-label">示例评论</span><p><span class="comment-avatar mint">M</span><span><b>Momo</b> 刚刚的星星弹起来了 ✨</span></p><p><span class="comment-avatar rose">L</span><span><b>Luna</b> 微笑真的会下雨耶</span></p><p><span class="comment-avatar violet">K</span><span><b>Kiki</b> 再来一个大笑！</span></p></div>
+      <div class="live-bottom"><span class="comment-placeholder" aria-label="评论输入框示意，不发送消息">说点什么… <small>示例</small></span><button class="bottom-action" id="like" aria-label="喜欢这个效果，仅本机反馈" aria-pressed="false"><span class="heart">♡</span><small>喜欢</small></button><button class="bottom-action effects-button" id="open-effects" aria-label="打开特效玩法"><svg><use href="#i-spark"/></svg><small>特效</small></button></div>
+      <div class="live-watermark">SMILE WEATHER · v0.5.1 <span>概念原型 / 非官方</span></div><div class="toast" id="local-toast" role="status" hidden></div>
+      <div class="error-panel" id="error-panel" role="alert" hidden><strong id="error-title"></strong><p id="error-copy"></p></div>
+      <button class="sheet-backdrop" id="close-backdrop" aria-label="关闭直播工具" hidden></button>
+      <section class="tools-sheet" id="tools-panel" role="dialog" aria-modal="true" aria-labelledby="tools-title" tabindex="-1" hidden><div class="sheet-handle"></div><header class="sheet-heading"><div><small>YOUR LITTLE CONTROL ROOM</small><h2 id="tools-title">直播工具</h2></div><button class="icon-button" id="close-tools" aria-label="关闭工具面板">×</button></header>
+      <p class="sheet-note">模拟直播间 · 无真实观众、评论发送或付费礼物</p>
+          <div class="toolbar">
+            <div class="session-status" role="status" aria-live="polite"><span id="session-dot" class="tiny-dot muted-dot"></span><span id="session-status">准备好，制造一点小惊喜。</span></div>
+            <div class="toolbar-actions"><button id="mirror" class="quiet-button" aria-pressed="true" title="切换自拍镜像">镜像 <span>开</span></button><label class="quality-control"><span class="sr-only">画质</span><select id="quality" aria-label="画质"><option value="standard">标准画质</option><option value="low">轻量画质</option></select></label><button id="stop" class="quiet-button stop-button" hidden><svg><use href="#i-stop"/></svg>停止</button></div>
+          </div>
+<button class="button camera-switch" id="switch-camera">使用真实摄像头</button>
+      <details class="play-guide" id="play-guide"><summary>表情玩法 <span>＋</span></summary>        <aside class="guide" id="how-it-works">
+          <div class="guide-heading"><span class="eyebrow">HOW TO PLAY</span><h2>三个动作，玩起来。</h2><p>从一个微笑开始。</p></div>
+          <div class="step-card" id="step-smile"><div class="step-icon rain-icon"><svg><use href="#i-rain"/></svg></div><div><div class="step-caption">01 / SMILE</div><h3>微笑，下点小雨</h3><p>云朵下雨，雨滴碰到头顶溅开。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-laugh"><div class="step-icon firework-icon"><svg><use href="#i-spark"/></svg></div><div><div class="step-caption">02 / LAUGH</div><h3>大笑，点亮烟花</h3><p>张嘴大笑，让三波星星依次绽放。</p></div><span class="step-indicator"></span></div>
+          <div class="step-card" id="step-move"><div class="step-icon move-icon"><svg><use href="#i-head"/></svg></div><div><div class="step-caption">03 / PLAY</div><h3>动动头，接住火花</h3><p>左右动头，看星星碰一下、弹起来。</p></div><span class="step-indicator"></span></div>
+          <div class="weather-status"><div class="weather-status-top"><span>表情实时反馈</span><span id="weather-symbol">○</span></div><strong id="weather-title">等一张笑脸</strong><p id="weather-copy">找到光线明亮的位置，让整张脸进入画面。</p><div class="smile-meter" aria-hidden="true"><span id="smile-fill"></span></div><div class="weather-status-bottom"><span id="expression-label">笑容强度</span><span id="expression-value">—</span></div></div>
+          <div class="guide-footnote"><svg><use href="#i-lock"/></svg><p>你的笑容留在这里。<br>画面仅在当前浏览器中处理。</p></div>
+        </aside></details>
+      <details class="diagnostics" id="diagnostics"><summary><span><svg><use href="#i-sliders"/></svg>调试与性能</span><span class="summary-hint">查看真实运行数据 <span>＋</span></span></summary>
+        <div class="diagnostic-content">
+          <p class="diagnostic-note" id="diagnostic-note">尚未开启会话。预览数据与真实摄像头数据会分别标记。</p>
+          <div class="metrics-grid">
+            <div><span>渲染 FPS</span><strong id="metric-fps">—</strong></div><div><span>识别 Hz</span><strong id="metric-hz">—</strong></div><div><span>推理 P95 / ms</span><strong id="metric-infer">—</strong></div><div><span>帧间隔 P95 / ms</span><strong id="metric-frame">—</strong></div><div><span>结果年龄 / ms</span><strong id="metric-age">—</strong></div><div><span>活动粒子</span><strong id="metric-particles">0</strong></div><div><span>星星碰撞</span><strong id="metric-collisions">0</strong></div><div><span>雨滴水花</span><strong id="metric-splashes">0</strong></div><div><span>表情状态</span><strong id="metric-state">no-face</strong></div>
+          </div>
+          <div class="debug-controls"><label><input type="checkbox" id="show-collider"> 显示头部边界与碰撞点</label><div class="raw-scores"><span>smile <b id="raw-smile">—</b></span><span>jawOpen <b id="raw-jaw">—</b></span><span id="input-size">视频 —</span></div><button class="quiet-button export-button" id="simulate-miss" hidden>模拟短暂丢脸</button><button class="quiet-button export-button" id="export" disabled>导出本次记录 ↓</button></div>
+          <p class="debug-explainer">表情系数不是识别准确率。数据在设备上测量，记录不含图像或面部关键点。当前采用主线程限频识别。</p>
+        </div>
+      </details>
+      <footer class="sheet-footer"><span>Smile Weather · v0.5.1</span><a href="./about.html">实现与验收 ↗</a><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">公开源码 ↗</a></footer></section>
+    </div>
+  </section>
+  <aside class="desktop-note"><span class="orbit-star">✳</span><p>SMILE.<br>SPARK.<br>REPEAT.</p><span class="vertical-note">CAMERA ON. GOOD VIBES IN.</span></aside>
+</main><noscript><p class="noscript">需要启用 JavaScript 才能使用摄像头和互动特效。</p></noscript></body></html>

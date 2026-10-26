@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-26",
+  "scenario": "Chrome, same display, 390x844 viewport, standard quality, idle synthetic avatar, diagnostics open; no camera/model",
+  "method": "v0.5.1 with the render gate enabled versus a temporary copy with only that gate disabled; readings from visible diagnostic UI, approx 1s FPS window and rolling P95",
+  "capped": {
+    "fps": "60.1",
+    "note": "模拟输入（不作为摄像头验收） · 无模型推理 · 运行中 · 活跃时长 61s · 最近最多 450 个样本的 P95",
+    "p95": "17.4"
+  },
+  "uncapped": {
+    "fps": "120.0",
+    "note": "模拟输入（不作为摄像头验收） · 无模型推理 · 运行中 · 活跃时长 73s · 最近最多 450 个样本的 P95",
+    "p95": "9.1"
+  },
+  "limitations": [
+    "Not an original v0.1 replay",
+    "Not real camera performance",
+    "Not average FPS across the whole run",
+    "No energy or CPU saving measurement"
+  ]
+}

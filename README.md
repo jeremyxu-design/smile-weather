@@ -1,74 +1,71 @@
-# Smile Weather · v0.5
+# Smile Weather · v0.5.1
 
-[Live Demo](https://jeremyxu-design.github.io/smile-weather/) · [备用演示](https://smile-weather-studio.xjylance.chatgpt.site/) · [实现与验收](https://smile-weather-studio.xjylance.chatgpt.site/about.html) · [真机验收表](https://smile-weather-studio.xjylance.chatgpt.site/acceptance.md)
+[打开 Live Demo](https://jeremyxu-design.github.io/smile-weather/) · [备用演示](https://smile-weather-studio.xjylance.chatgpt.site/) · [提交文案](https://github.com/jeremyxu-design/smile-weather/blob/main/SUBMISSION.md) · [验收记录](https://github.com/jeremyxu-design/smile-weather/blob/main/QA.md)
 
-微笑下雨，张嘴大笑释放三波星星，移动头部让主要星星反弹。手机全屏、电脑竖屏预览。独立概念原型，非TikTok官方产品；评论与主播信息为示例，不进行真实直播。应用不上传/录制画面，不请求麦克风。
+微笑下雨，张嘴大笑释放三波星星，移动头部让星星反弹。单 Canvas 2D 实现的直播 AR 概念原型，手机全屏、电脑竖向舞台。独立作品，非 TikTok 官方产品。
 
 ## 30秒体验
 
-1. 点击“开启摄像头”，保持脸在画面中间。
-2. 微笑→放松→张嘴大笑→左右移动头部。
-3. 右上工具→调试与性能→显示头部边界与碰撞点，可观察真实接触；底部“特效”打开玩法。
+点击“开启摄像头” → 微笑 → 放松 → 张嘴大笑 → 左右动头。右上角工具可开启头部边界和碰撞点、切换画质、停止摄像头或导出运行记录。无摄像头时可以试模拟效果。
 
-“试试模拟效果”只用于预览，不作为真人验收。主链接使用固定公共CDN，备用Sites使用同源模型；两条资源加载路径需分别检查。首次摄像头需要联网加载模型。
+## 我如何定义这个玩法
 
-## 定义与边界
+我把“屏幕下雨”收敛为跟随主播的天气云，把烟花安排在头部上方或侧方：让表情与效果有明确联系，给雨滴水花和星星反弹留出轨迹，同时尽量为面部和评论留白。
 
-| 规则 | 当前实现 |
+| 行为 | 规则 |
 | --- | --- |
-| 微笑 | smile均值≥.40进入、≤.25退出，各持续300ms |
-| 大笑 | smile≥.50且jawOpen≥.50；任一≤.35持续300ms退出；大笑优先 |
-| 一次笑一次烟花 | 进入时释放，1.5s冷却；保持不连发、冷却不补发 |
-| 大笑转微笑 | 确认退出大笑后，重新确认微笑300ms，无需先回到平静 |
-| 短暂丢脸 | 450ms内保留已确认状态，立即停雨/移除碰撞，缺失不计入确认时间 |
-| 头部碰撞 | 旋转椭圆近似，顶部扩展15%；连续轨迹检测、法线反射、头部速度传递 |
+| 微笑 | 双侧 smile 均值 ≥ .40 进入、≤ .25 退出，各持续300ms |
+| 大笑 | smile ≥ .50 且 jawOpen ≥ .50；任一 ≤ .35 持续300ms退出，大笑优先 |
+| 一次笑一次烟花 | 进入时释放、1.5秒冷却，保持大笑不连发 |
+| 大笑转微笑 | 确认退出大笑后，重新确认微笑300ms |
+| 短暂丢脸 | 450ms内保留已确认表情，立即停雨并移除碰撞体 |
+| 物理互动 | 8颗大星及中层粒子碰到头部椭圆会反弹，雨滴碰到头顶溅开 |
 
-“大笑”是张嘴微笑的代理，不识别情绪或笑声。输入平滑75ms、状态确认及采样均带来延迟；300ms不是端到端响应承诺。8颗大星及中层粒子参与物理，前后层为装饰；椭圆不等于真实头发分割或3D头部。
+v0.5.1 统一了有效/缺失识别样本的计时点；电脑舞台改为3:4以减少横向裁切；大星错开起点，YAY延后出现并短暂保持不透明。
 
-## 性能ROI：已实现的控制与未测的收益
+## 性能设计与成本
 
-| 选择 | 已实现 | 取舍 / 待测 |
-| --- | --- | --- |
-| 单Canvas 2D | 无Three/Matter，无服务端推理 | 2.5D外观，二维碰撞近似 |
-| 分频调度 | 绘制最高60Hz、主线程识别目标15Hz；后台暂停 | 限频不消除单次推理阻塞，Worker待测后决定 |
-| 预绘与复用 | 启动时预绘贴图，无逐粒子渐变/filter/shadowBlur；粒子槽复用 | 不声称整个应用零分配 |
-| 标准 / 轻量 | DPR上限1.5 / 1，活动预算800 / 400 | 统一预分配800槽，两档每簇均最多104颗；不是内存或粒子减半 |
+| 决策 | 当前实现 |
+| --- | --- |
+| 纯前端 | 无服务端推理、无 Three/Matter，贴图启动时预绘 |
+| 控制绘制频率 | 实际绘制最高60Hz，主线程识别目标15Hz；后台暂停 |
+| 复用内存 | 预分配800粒子槽，水花32槽、碰撞提示24槽 |
+| 标准 / 轻量 | 活动预算800 / 400；画布DPR上限1.5 / 1；单簇均最多104颗 |
+| 按需加载 | 点击开启摄像头后加载模型；模拟预览不加载模型 |
 
-零服务端推理不等于零总体成本：模型下载、托管和终端计算仍有成本。实际耗电/内存、标准轻量收益尚未测量，不宣称性能翻倍。先用同设备、同光照、同动作的60秒记录决定是否继续优化。
+模型文件3,758,596字节；随运行环境选择的WASM约10.48–11.15MB（原始文件大小，非网络压缩传输量）。轻量模式降低像素绘制负担；保留池容量余量，后续用连续触发实测决定是否缩减。
 
-诊断FPS/Hz为最近约1秒窗口；推理/帧间隔P95为最近最多450样本，不是60秒全程统计。initMs包含开始到模型就绪的流程，不能当纯下载耗时。导出含浏览器和配置，不含图像或landmarks；原始设备日志不提交公开仓库。
+## 验证结果
 
-## 当前验收状态
+- **30项核心测试通过**：模块版与生成后的单文件版执行同一组测试，覆盖触发、丢脸恢复、连续碰撞、粒子复用及出生位置。
+- 同场景模拟对照：只切换绘制限频，面板读数120.0 → 60.1 FPS；测量口径见QA。
+- v0.5体验反馈：目前没有发现问题；早期iPhone核心流程及遮脸恢复也收到成功反馈。
+- v0.5.1 真机命中次数、60秒运行记录和碰撞短片：填写[验收表](https://github.com/jeremyxu-design/smile-weather/blob/main/ACCEPTANCE.md)。
 
-**v0.5核心测试29项通过**，模块与公开单文件版执行相同的29项，不计为58项独立测试。Chrome模拟交互、320/390px布局和公开发布已检查；这些不证明真人模型准确率。
-
-历史：v0.1 Sites的iPhone核心流程用户反馈成功；v0.4用户反馈遮脸恢复未重复烟花。两者不外推为v0.5全项验收。
-
-2026-10-25，用户在v0.5验收请求下反馈“目前没有发现问题”。这是定性体验反馈；设备、次数、时长及量化日志未提供，不记为逐项或全量通过。
-
-**待补充：** v0.5电脑/iPhone各10次微笑与大笑、误触发、标准/轻量各60秒、真实碰撞短片、iPhone安全区和两条资源加载路径。结果按[验收表](https://smile-weather-studio.xjylance.chatgpt.site/acceptance.md)填写，不填虚构数字。
+**边界：** 模拟测试不等于摄像头实测；张嘴微笑是“大笑”的输入代理，头部物理是二维椭圆近似。300ms为状态确认窗口；识别主线程限频仍有单次阻塞。性能面板FPS为约1秒窗口、P95为最近450样本，详细定义和历史证据见[QA](https://github.com/jeremyxu-design/smile-weather/blob/main/QA.md)。
 
 ## Vibecoding复盘（不超过200字）
 
-初版把requestAnimationFrame当成固定60FPS，高刷屏模拟预览实测120.2FPS，重复消耗绘制预算。我要求：“按单调时间将实际绘制限为60Hz，识别独立限15Hz；分别记录频率，模拟数据不得冒充摄像头性能。”随后改为到期才更新物理和绘制，并记录实际绘制频率。
+初版把requestAnimationFrame当成固定60FPS，高刷屏模拟预览测得120.2FPS。我要求：“按单调时间将实际绘制限为60Hz，识别独立限15Hz；分别记录频率，模拟数据不得冒充摄像头性能。”改为到期才更新物理与绘制。同机同场景仅切换限频，模拟面板读数为120.0与60.1FPS，验证了绘制频率控制。
 
-120.2FPS为历史模拟观察，与历史真实摄像头59.99FPS不是同条件前后对照；不据此宣称性能提升比例。
+## 修改与运行
 
-## 资源与许可
+公开仓库包含可直接编辑的模块和生成脚本，Pages继续使用根目录 `index.html`。
 
-固定MediaPipe Tasks Vision 0.10.35、float16/1模型、VIDEO模式、单脸并开启blendshapes。
-
-[官方文档](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker/web_js) · [Apache-2.0许可](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) · [资源说明](https://smile-weather-studio.xjylance.chatgpt.site/THIRD_PARTY.md)
-
-模型SHA256：`64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff`
-
-## 运行与修改
-
-`index.html`为完整单文件分发版；`core-tests.mjs`直接提取其中的核心实现。无npm依赖、无需构建。
+| 文件 | 作用 |
+| --- | --- |
+| `app.mjs` / `dev.html` / `styles.css` | 生命周期、模块开发入口与界面 |
+| `expression.mjs` / `geometry.mjs` | 表情状态机、坐标和连续碰撞 |
+| `particles.mjs` / `metrics.mjs` / `config.mjs` | 粒子与渲染、统计、固定配置 |
+| `modular-tests.mjs` / `core-tests.mjs` | 模块与生成单文件的同组回归测试 |
+| `build.mjs` | 从模块生成 `index.html` 和单文件测试 |
 
 ```sh
-python3 -m http.server 4176 --bind 127.0.0.1
-node --test core-tests.mjs
+npm run build
+npm test
+npm run serve
 ```
 
-电脑打开 <http://127.0.0.1:4176>；手机使用HTTPS链接。Pages使用main分支根目录。版本过程不作为当前验收结论，当前规则以上文为准。
+电脑打开 <http://127.0.0.1:4176/dev.html> 调试模块，修改后重新构建，再检查 `/index.html`。手机使用HTTPS。应用不录制或上传画面，不请求麦克风；直播评论为示例。
+
+MediaPipe Tasks Vision固定0.10.35、float16/1模型。主链接使用公共CDN，Sites使用同源资源。[第三方资源与许可](https://github.com/jeremyxu-design/smile-weather/blob/main/THIRD_PARTY.md)。
