@@ -1,4 +1,4 @@
-export const VERSION = '0.5.1';
+export const VERSION = '0.5.2';
 export const MEDIAPIPE_VERSION = '0.10.35';
 export const ASSETS = {
   bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',

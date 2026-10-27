@@ -292,3 +292,37 @@ test('hero stars start separated inside the stage, with matching previous positi
     assert.equal(heroes,8); assert.equal(positions.size,8); assert.equal(pool.count,104);
   }
 });
+
+test('session averages retain all samples after rolling windows wrap', () => {
+  const m = new Metrics(); m.reset('camera'); m.frame(0);
+  let t = 0;
+  for (let i = 0; i < 600; i++) { t += 10; m.frame(t); m.inferred(4); }
+  for (let i = 0; i < 600; i++) { t += 20; m.frame(t); m.inferred(12); }
+  const s = m.snapshot();
+  near(s.sessionAverageFps, 1200 / 18);
+  near(s.sessionAverageDetectionHz, 1200 / 18);
+  near(s.sessionMeanInferenceMs, 8);
+  assert.equal(s.totalFrameIntervals, 1200);
+  assert.equal(s.rollingFrameSamples, 450); assert.equal(s.rollingInferenceSamples, 450);
+  assert.equal(s.frameIntervalP95Ms, 20); assert.equal(s.inferenceP95Ms, 12);
+});
+test('session averages exclude hidden gaps, retain foreground stalls, and reset cleanly', () => {
+  const m = new Metrics(); m.reset('camera'); m.frame(0); m.frame(20); m.inferred(8);
+  m.pause(); m.inferred(100); m.resume(); m.frame(100000); m.frame(100020); m.inferred(12);
+  near(m.snapshot().sessionAverageFps, 50); near(m.snapshot().sessionAverageDetectionHz, 50);
+  near(m.snapshot().sessionMeanInferenceMs, 10);
+  m.frame(100220);
+  near(m.snapshot().sessionAverageFps, 3000 / 240);
+  assert.equal(m.snapshot().elapsedSeconds, .24);
+  m.reset('camera');
+  assert.equal(m.snapshot().sessionAverageFps, null); assert.equal(m.snapshot().sessionAverageDetectionHz, null);
+  assert.equal(m.snapshot().sessionMeanInferenceMs, null); assert.equal(m.snapshot().totalInferences, 0);
+});
+test('preview reports rendering averages without camera metrics and invalid inference samples are ignored', () => {
+  const m = new Metrics(); m.reset('preview'); m.frame(0); m.frame(25);
+  near(m.snapshot().sessionAverageFps, 40);
+  assert.equal(m.snapshot().sessionAverageDetectionHz, null); assert.equal(m.snapshot().sessionMeanInferenceMs, null);
+  m.reset('camera'); m.frame(0); m.frame(50);
+  for (const invalid of [NaN, Infinity, -1]) m.inferred(invalid);
+  assert.equal(m.snapshot().totalInferences, 0); assert.equal(m.snapshot().sessionMeanInferenceMs, null);
+});

@@ -284,6 +284,7 @@ function updateUi(now) {
   $('step-laugh').classList.toggle('active', found && machine.state === 'laugh');
   $('step-move').classList.toggle('active', active && collisionHighlightUntil > now);
   const stats = !active && finalSnapshot ? finalSnapshot : metrics.snapshot(snapshot());
+  $('metric-session-fps').textContent = fmt(stats.sessionAverageFps); $('metric-session-hz').textContent = fmt(stats.sessionAverageDetectionHz);
   $('metric-fps').textContent = fmt(stats.fps); $('metric-hz').textContent = fmt(stats.detectionHz);
   $('metric-infer').textContent = fmt(stats.inferenceP95Ms); $('metric-frame').textContent = fmt(stats.frameIntervalP95Ms);
   $('metric-age').textContent = active && mode === 'camera' ? fmt(stats.resultAgeMs) : '—';
@@ -294,7 +295,7 @@ function updateUi(now) {
   $('raw-smile').textContent = found ? machine.smile.toFixed(3) : '—'; $('raw-jaw').textContent = found ? machine.jaw.toFixed(3) : '—';
   $('input-size').textContent = captureSettings ? `视频 ${captureSettings.width}×${captureSettings.height}` : mode === 'preview' ? '输入：模拟' : '视频 —';
   $('diagnostic-note').textContent = metrics.input === 'idle' ? '尚未开启会话。预览数据与真实摄像头数据会分别标记。' :
-    `${metrics.input === 'camera' ? '真实摄像头' : '模拟输入（不作为摄像头验收）'} · ${backend || '无模型推理'} · ${active ? '运行中' : '已停止'} · 活跃时长 ${(metrics.activeMs / 1000).toFixed(0)}s · 最近最多 450 个样本的 P95`;
+    `${metrics.input === 'camera' ? '真实摄像头' : '模拟输入（不作为摄像头验收）'} · ${backend || '无模型推理'} · ${active ? '运行中' : '已停止'} · 活跃时长 ${(metrics.activeMs / 1000).toFixed(0)}s · 全程均值排除后台；P95 为最近最多 450 个样本`;
 }
 function exportReport() {
   const report = { schema: 'smile-weather-session/v1', appVersion: VERSION, mediapipeVersion: MEDIAPIPE_VERSION,
@@ -302,7 +303,10 @@ function exportReport() {
     userAgent: navigator.userAgent, capture: captureSettings, backend, threading: 'main-thread-throttled',
     settings: CONFIG, initMs: metrics.initMs, summary: finalSnapshot || metrics.snapshot(snapshot()),
     samples: metrics.samples, events: metrics.events,
-    measurementNotes: ['Rendering FPS and inference frequency are distinct.', 'P95 uses up to the most recent 450 samples.',
+    measurementNotes: ['Rendering FPS and inference frequency are distinct.', 'fps/detectionHz are approximately 1-second windows. P95/P50 use up to the most recent 450 samples; they are not session percentiles.',
+      'sessionAverageFps = totalFrameIntervals / active seconds; first/resumed anchor frames are excluded.',
+      'sessionAverageDetectionHz = totalInferences / active seconds; sessionMeanInferenceMs covers all valid completed inference samples.',
+      'Active time sums foreground rendered-frame intervals, excluding loading and hidden/resume gaps. Session aggregates use constant memory.',
       'Result age starts when detectForVideo is called, not at sensor exposure.', 'Trigger accuracy and end-to-end expression latency require human evaluation.',
       'Preview mode uses synthetic input and is not camera or model verification.', 'No images, video, landmarks or persistent face identifiers are included.'] };
   const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
