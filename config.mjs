@@ -1,9 +1,9 @@
-export const VERSION = '0.5.2';
+export const VERSION = '0.5.3';
 export const MEDIAPIPE_VERSION = '0.10.35';
 export const ASSETS = {
-  bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',
-  wasm: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm',
-  model: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+  bundle: new URL('./vendor/mediapipe/vision_bundle.mjs', import.meta.url).href,
+  wasm: new URL('./vendor/mediapipe/wasm', import.meta.url).href,
+  model: new URL('./models/face_landmarker.task', import.meta.url).href,
 };
 export const CONFIG = Object.freeze({
   renderHz: 60,
@@ -25,3 +25,11 @@ export const CONFIG = Object.freeze({
   headPadding: 0.15,
 });
 export const PALETTE = ['#25f4ee', '#fe2c55', '#f8f4f0', '#ff91b2', '#b3a4ff', '#c3ff5c'];
+
+// Advisory only: embedded browsers may support camera in some versions.
+export function embeddedBrowserName(ua = '') {
+  if (/MicroMessenger/i.test(ua)) return '微信';
+  if (/Lark|Feishu/i.test(ua)) return '飞书';
+  if (/aweme|BytedanceWebview|musical_ly|TikTok/i.test(ua)) return '抖音 / TikTok';
+  return null;
+}

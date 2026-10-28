@@ -1,4 +1,4 @@
-# Smile Weather · v0.5.2
+# Smile Weather · v0.5.3
 
 [打开 Live Demo](https://jeremyxu-design.github.io/smile-weather/) · [备用演示](https://smile-weather-studio.xjylance.chatgpt.site/) · [提交文案](https://github.com/jeremyxu-design/smile-weather/blob/main/SUBMISSION.md) · [验收记录](https://github.com/jeremyxu-design/smile-weather/blob/main/QA.md)
 
@@ -41,10 +41,10 @@ v0.5.2 增加整段会话的平均渲染/识别频率与平均推理耗时；全
 
 ## 验证结果
 
-- **33项核心测试通过**：模块版与生成后的单文件版执行同一组测试，覆盖触发、丢脸恢复、连续碰撞、粒子复用及出生位置。
+- **34项核心测试通过**：模块版与生成后的单文件版执行同一组测试，覆盖触发、丢脸恢复、连续碰撞、粒子复用及出生位置。
 - v0.5.1 同场景模拟对照：只切换绘制限频，面板读数120.0 → 60.1 FPS；测量口径见QA。
 - v0.5体验反馈：目前没有发现问题；早期iPhone核心流程及遮脸恢复也收到成功反馈。
-- 2026-10-27，MacBook Pro单人自测：微笑10/10、大笑8/10；讲话时微笑误触发1次；张嘴大笑前先出现雨2次。后者为表情过渡现象，尚无逐帧记录证明原因；两次大笑未命中仍待定位。
+- 2026-10-27，v0.5.2 MacBook Pro单人自测：微笑10/10、大笑8/10；讲话时微笑误触发1次；张嘴大笑前先出现雨2次。后者为表情过渡现象，尚无逐帧记录证明原因；两次大笑未命中仍待定位。
 - 本轮来自v0.5.2 Sites验收请求下的用户反馈；系统、浏览器版本、光照、讲话试验总数及60秒性能日志未提供，不计算讲话误触发率。iPhone本轮数据待补。 详情见[验收表](https://github.com/jeremyxu-design/smile-weather/blob/main/ACCEPTANCE.md)。
 
 **边界：** 模拟测试不等于摄像头实测；张嘴微笑是“大笑”的输入代理，头部物理是二维椭圆近似。300ms为状态确认窗口；识别主线程限频仍有单次阻塞。性能面板区分全程平均和约1秒窗口频率；P95为最近450样本，详细定义和历史证据见[QA](https://github.com/jeremyxu-design/smile-weather/blob/main/QA.md)。
@@ -77,4 +77,11 @@ npm run serve
 
 电脑打开 <http://127.0.0.1:4176/dev.html> 调试模块，修改后重新构建，再检查 `/index.html`。手机使用HTTPS。应用不录制或上传画面，不请求麦克风；直播评论为示例。
 
-MediaPipe Tasks Vision固定0.10.35、float16/1模型。主链接使用公共CDN，Sites使用同源资源。[第三方资源与许可](https://github.com/jeremyxu-design/smile-weather/blob/main/THIRD_PARTY.md)。
+MediaPipe Tasks Vision固定0.10.35、float16/1模型。GitHub Pages与Sites均使用同域识别库、WASM和模型。[第三方资源与许可](https://github.com/jeremyxu-design/smile-weather/blob/main/THIRD_PARTY.md)。
+
+
+## 2026-10-28 加载与兼容性修订
+
+v0.5.3将识别库、WASM和模型随页面同域托管；微信、飞书、抖音/TikTok内置浏览器显示外部浏览器建议，仍允许尝试摄像头和模拟体验。复制失败时提供可手动复制的链接。目标网络冷启动与真人性能仍待测试，同域部署不代表大陆网络可达性已通过。
+
+按预算情景估算：每次冷启动假设传输15MB，一万次约150GB（十进制）；假设流量单价为0.2元/GB，纯分发约30元。单价仅为敏感性演算，不是供应商报价或实际账单；缓存、压缩、托管配额与维护另计。本地推理免去服务端逐帧调用，但设备耗电、首用等待和兼容性由用户侧承担。

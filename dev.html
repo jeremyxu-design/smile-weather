@@ -7,8 +7,8 @@
   <meta name="description" content="微笑落雨，大笑绽放。一个在浏览器本地运行、让烟花与头部碰撞的表情互动实验。">
   <title>Smile Weather · 表情天气台</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.5.2">
-  <script type="module" src="./app.mjs?v=0.5.2"></script>
+  <link rel="stylesheet" href="./styles.css?v=0.5.3">
+  <script type="module" src="./app.mjs?v=0.5.3"></script>
 </head>
 <body>
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -36,6 +36,7 @@
               <p>你的表情，就是这场直播的特效开关。</p>
               <button class="button button-primary" id="start"><svg><use href="#i-camera"/></svg><span>开启摄像头</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
               <button class="preview-link" id="preview">试试模拟效果 <span>↗</span></button>
+              <aside id="browser-help" class="browser-help" hidden><p id="browser-help-copy"></p><button id="copy-link" class="quiet-button">复制体验链接</button><p id="copy-status" role="status" aria-live="polite"></p><input id="copy-url" aria-label="体验链接，请手动复制" readonly hidden></aside>
               <p class="privacy-note">不录制、不上传你的摄像头画面</p>
             </div>
 
@@ -44,7 +45,7 @@
       <div class="preview-controls" id="preview-controls" hidden><span>模拟</span><button data-expression="idle" class="selected">平静</button><button data-expression="smile">微笑</button><button data-expression="laugh">大笑</button></div>
       <div class="audience-layer" aria-label="示例评论，并非真实观众"><span class="sample-label">示例评论</span><p><span class="comment-avatar mint">M</span><span><b>Momo</b> 刚刚的星星弹起来了 ✨</span></p><p><span class="comment-avatar rose">L</span><span><b>Luna</b> 微笑真的会下雨耶</span></p><p><span class="comment-avatar violet">K</span><span><b>Kiki</b> 再来一个大笑！</span></p></div>
       <div class="live-bottom"><span class="comment-placeholder" aria-label="评论输入框示意，不发送消息">说点什么… <small>示例</small></span><button class="bottom-action" id="like" aria-label="喜欢这个效果，仅本机反馈" aria-pressed="false"><span class="heart">♡</span><small>喜欢</small></button><button class="bottom-action effects-button" id="open-effects" aria-label="打开特效玩法"><svg><use href="#i-spark"/></svg><small>特效</small></button></div>
-      <div class="live-watermark">SMILE WEATHER · v0.5.2 <span>概念原型 / 非官方</span></div><div class="toast" id="local-toast" role="status" hidden></div>
+      <div class="live-watermark">SMILE WEATHER · v0.5.3 <span>概念原型 / 非官方</span></div><div class="toast" id="local-toast" role="status" hidden></div>
       <div class="error-panel" id="error-panel" role="alert" hidden><strong id="error-title"></strong><p id="error-copy"></p></div>
       <button class="sheet-backdrop" id="close-backdrop" aria-label="关闭直播工具" hidden></button>
       <section class="tools-sheet" id="tools-panel" role="dialog" aria-modal="true" aria-labelledby="tools-title" tabindex="-1" hidden><div class="sheet-handle"></div><header class="sheet-heading"><div><small>YOUR LITTLE CONTROL ROOM</small><h2 id="tools-title">直播工具</h2></div><button class="icon-button" id="close-tools" aria-label="关闭工具面板">×</button></header>
@@ -73,7 +74,7 @@
           <p class="debug-explainer">表情系数不是识别准确率。数据在设备上测量，记录不含图像或面部关键点。当前采用主线程限频识别。</p>
         </div>
       </details>
-      <footer class="sheet-footer"><span>Smile Weather · v0.5.2</span><a href="./about.html">实现与验收 ↗</a><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">公开源码 ↗</a></footer></section>
+      <footer class="sheet-footer"><span>Smile Weather · v0.5.3</span><a href="./about.html">实现与验收 ↗</a><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">公开源码 ↗</a></footer></section>
     </div>
   </section>
   <aside class="desktop-note"><span class="orbit-star">✳</span><p>SMILE.<br>SPARK.<br>REPEAT.</p><span class="vertical-note">CAMERA ON. GOOD VIBES IN.</span></aside>

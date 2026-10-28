@@ -16,4 +16,4 @@
 - SHA256: `64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff`
 - The original task bundle is redistributed without modification as a MediaPipe model asset. It is not an original model trained for this prototype.
 
-The UI, illustrations, state machine, particle renderer and physics are implemented in this project. No remote font, stock portrait or analytics library is used. Full resource checksums are in the source repository's `docs/ASSETS.json`.
+The UI, illustrations, state machine, particle renderer and physics are implemented in this project. No remote font, stock portrait or analytics library is used. Full resource checksums are in the source repository's `ASSETS.json`.

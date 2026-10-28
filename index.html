@@ -16,16 +16,23 @@
 @media(orientation:landscape) and (max-width:950px) and (max-height:550px){.desktop-header,.desktop-intro,.desktop-note{display:none}.live-layout{display:block;padding:18px}.phone{height:700px;min-height:700px;width:350px;margin:auto;border-radius:25px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.stage-hint{transition:none}.spinner{animation-duration:2s}}
 
+.browser-help { width:min(100%,320px); padding:10px 12px; border:1px solid #ffffff30; border-radius:12px; background:#15151be8; margin:8px auto; text-align:left; }
+.browser-help p { font-size:12px; line-height:1.45; margin:0 0 7px; }
+.browser-help #copy-status:empty { display:none; }
+.browser-help input { width:100%; color:#fff; background:#25252c; border:1px solid #777; padding:8px; }
+.welcome:has(.browser-help:not([hidden])) { max-height:calc(100% - 155px); overflow-y:auto; padding-top:12px; padding-bottom:12px; }
+.welcome:has(.browser-help:not([hidden])) .weather-art { display:none; }
+
 </style>
   <script type="module">
 // CORE_START
 // config.mjs
-const VERSION = '0.5.2';
+const VERSION = '0.5.3';
 const MEDIAPIPE_VERSION = '0.10.35';
 const ASSETS = {
-  bundle: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs',
-  wasm: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm',
-  model: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+  bundle: new URL('./vendor/mediapipe/vision_bundle.mjs', import.meta.url).href,
+  wasm: new URL('./vendor/mediapipe/wasm', import.meta.url).href,
+  model: new URL('./models/face_landmarker.task', import.meta.url).href,
 };
 const CONFIG = Object.freeze({
   renderHz: 60,
@@ -47,6 +54,14 @@ const CONFIG = Object.freeze({
   headPadding: 0.15,
 });
 const PALETTE = ['#25f4ee', '#fe2c55', '#f8f4f0', '#ff91b2', '#b3a4ff', '#c3ff5c'];
+
+// Advisory only: embedded browsers may support camera in some versions.
+function embeddedBrowserName(ua = '') {
+  if (/MicroMessenger/i.test(ua)) return '微信';
+  if (/Lark|Feishu/i.test(ua)) return '飞书';
+  if (/aweme|BytedanceWebview|musical_ly|TikTok/i.test(ua)) return '抖音 / TikTok';
+  return null;
+}
 
 // expression.mjs
 
@@ -734,6 +749,7 @@ class Metrics {
 // CORE_END
 
 const $ = id => document.getElementById(id);
+const embeddedBrowser = embeddedBrowserName(navigator.userAgent);
 const video = $('camera'), stage = $('stage'), canvas = $('effects');
 const machine = new ExpressionMachine();
 const detectionClock = new DetectionClock();
@@ -773,7 +789,7 @@ function setSessionStatus(text, active = false) {
   $('session-dot').classList.toggle('muted-dot', !active);
 }
 function hideError() { $('error-panel').hidden = true; }
-function showError(title, copy) { $('error-title').textContent = title; $('error-copy').textContent = copy; $('error-panel').hidden = false; }
+function showError(title, copy) { $('browser-help').hidden = false; $('error-title').textContent = title; $('error-copy').textContent = copy; $('error-panel').hidden = false; }
 function previewTarget() {
   const rx = Math.min(width * 0.15, 105);
   return { cx: previewX * width, cy: previewY * height, rx, ry: rx * 1.22, angle: (previewX - 0.5) * 0.3, valid: true };
@@ -1145,6 +1161,22 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', () => stopSession());
 setMode('idle'); resize(); updateUi(performance.now());
 
+$('browser-help').hidden = !embeddedBrowser;
+$('browser-help-copy').textContent = embeddedBrowser
+  ? `你正在${embeddedBrowser}内打开。若摄像头无法启动，请复制链接到 Safari 或 Chrome；也可继续尝试或先体验模拟效果。`
+  : '若摄像头无法启动，请复制链接到 Safari 或 Chrome，允许摄像头后重试。模拟效果也可使用。';
+$('copy-link').addEventListener('click', async () => {
+  const url = new URL(location.href); url.search = ''; url.hash = '';
+  try {
+    await navigator.clipboard.writeText(url.href);
+    $('copy-status').textContent = '链接已复制，请粘贴到 Safari 或 Chrome 打开。';
+  } catch {
+    $('copy-url').hidden = false; $('copy-url').value = url.href;
+    $('copy-url').focus(); $('copy-url').select();
+    $('copy-status').textContent = '未能自动复制，请长按或手动复制下方链接。';
+  }
+});
+
 </script>
 </head>
 <body>
@@ -1173,6 +1205,7 @@ setMode('idle'); resize(); updateUi(performance.now());
               <p>你的表情，就是这场直播的特效开关。</p>
               <button class="button button-primary" id="start"><svg><use href="#i-camera"/></svg><span>开启摄像头</span><svg class="button-arrow"><use href="#i-arrow"/></svg></button>
               <button class="preview-link" id="preview">试试模拟效果 <span>↗</span></button>
+              <aside id="browser-help" class="browser-help" hidden><p id="browser-help-copy"></p><button id="copy-link" class="quiet-button">复制体验链接</button><p id="copy-status" role="status" aria-live="polite"></p><input id="copy-url" aria-label="体验链接，请手动复制" readonly hidden></aside>
               <p class="privacy-note">不录制、不上传你的摄像头画面</p>
             </div>
 
@@ -1181,7 +1214,7 @@ setMode('idle'); resize(); updateUi(performance.now());
       <div class="preview-controls" id="preview-controls" hidden><span>模拟</span><button data-expression="idle" class="selected">平静</button><button data-expression="smile">微笑</button><button data-expression="laugh">大笑</button></div>
       <div class="audience-layer" aria-label="示例评论，并非真实观众"><span class="sample-label">示例评论</span><p><span class="comment-avatar mint">M</span><span><b>Momo</b> 刚刚的星星弹起来了 ✨</span></p><p><span class="comment-avatar rose">L</span><span><b>Luna</b> 微笑真的会下雨耶</span></p><p><span class="comment-avatar violet">K</span><span><b>Kiki</b> 再来一个大笑！</span></p></div>
       <div class="live-bottom"><span class="comment-placeholder" aria-label="评论输入框示意，不发送消息">说点什么… <small>示例</small></span><button class="bottom-action" id="like" aria-label="喜欢这个效果，仅本机反馈" aria-pressed="false"><span class="heart">♡</span><small>喜欢</small></button><button class="bottom-action effects-button" id="open-effects" aria-label="打开特效玩法"><svg><use href="#i-spark"/></svg><small>特效</small></button></div>
-      <div class="live-watermark">SMILE WEATHER · v0.5.2 <span>概念原型 / 非官方</span></div><div class="toast" id="local-toast" role="status" hidden></div>
+      <div class="live-watermark">SMILE WEATHER · v0.5.3 <span>概念原型 / 非官方</span></div><div class="toast" id="local-toast" role="status" hidden></div>
       <div class="error-panel" id="error-panel" role="alert" hidden><strong id="error-title"></strong><p id="error-copy"></p></div>
       <button class="sheet-backdrop" id="close-backdrop" aria-label="关闭直播工具" hidden></button>
       <section class="tools-sheet" id="tools-panel" role="dialog" aria-modal="true" aria-labelledby="tools-title" tabindex="-1" hidden><div class="sheet-handle"></div><header class="sheet-heading"><div><small>YOUR LITTLE CONTROL ROOM</small><h2 id="tools-title">直播工具</h2></div><button class="icon-button" id="close-tools" aria-label="关闭工具面板">×</button></header>
@@ -1210,7 +1243,7 @@ setMode('idle'); resize(); updateUi(performance.now());
           <p class="debug-explainer">表情系数不是识别准确率。数据在设备上测量，记录不含图像或面部关键点。当前采用主线程限频识别。</p>
         </div>
       </details>
-      <footer class="sheet-footer"><span>Smile Weather · v0.5.2</span><a href="./about.html">实现与验收 ↗</a><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">公开源码 ↗</a></footer></section>
+      <footer class="sheet-footer"><span>Smile Weather · v0.5.3</span><a href="./about.html">实现与验收 ↗</a><a href="https://github.com/jeremyxu-design/smile-weather" target="_blank" rel="noopener">公开源码 ↗</a></footer></section>
     </div>
   </section>
   <aside class="desktop-note"><span class="orbit-star">✳</span><p>SMILE.<br>SPARK.<br>REPEAT.</p><span class="vertical-note">CAMERA ON. GOOD VIBES IN.</span></aside>

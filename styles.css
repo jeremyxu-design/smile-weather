@@ -5,3 +5,10 @@
 @media(max-width:350px){.live-header{left:12px;right:12px;gap:6px}.host{gap:7px}.host strong{font-size:12px}.host-avatar{width:31px;height:31px}.live-badge{font-size:9px}.icon-button{width:32px;height:32px}.live-meta{font-size:9px;left:13px;right:13px}.audience-layer{font-size:11px;right:35px}.tools-sheet{padding-left:14px;padding-right:14px}.preview-controls button{padding:9px 10px}}
 @media(orientation:landscape) and (max-width:950px) and (max-height:550px){.desktop-header,.desktop-intro,.desktop-note{display:none}.live-layout{display:block;padding:18px}.phone{height:700px;min-height:700px;width:350px;margin:auto;border-radius:25px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.stage-hint{transition:none}.spinner{animation-duration:2s}}
+
+.browser-help { width:min(100%,320px); padding:10px 12px; border:1px solid #ffffff30; border-radius:12px; background:#15151be8; margin:8px auto; text-align:left; }
+.browser-help p { font-size:12px; line-height:1.45; margin:0 0 7px; }
+.browser-help #copy-status:empty { display:none; }
+.browser-help input { width:100%; color:#fff; background:#25252c; border:1px solid #777; padding:8px; }
+.welcome:has(.browser-help:not([hidden])) { max-height:calc(100% - 155px); overflow-y:auto; padding-top:12px; padding-bottom:12px; }
+.welcome:has(.browser-help:not([hidden])) .weather-art { display:none; }

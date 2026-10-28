@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 const source = readFileSync(new URL('./index.html', import.meta.url), 'utf8').split('// CORE_START\n')[1].split('// CORE_END')[0];
-const {CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics} = await import('data:text/javascript,' + encodeURIComponent(source + '\nexport {CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics};'));
+const {embeddedBrowserName, CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics} = await import('data:text/javascript,' + encodeURIComponent(source.replaceAll('import.meta.url', JSON.stringify('https://example.test/demo/index.html')) + '\nexport {embeddedBrowserName, CONFIG, ExpressionMachine, extractExpression, DetectionClock, coverTransform, mapLandmark, makeHead, estimateHead, sweepEllipse, reflectVelocity, followHead, ParticleSystem, ParticleRenderer, roundedPath, popScale, Metrics};'));
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -323,4 +323,12 @@ test('preview reports rendering averages without camera metrics and invalid infe
   m.reset('camera'); m.frame(0); m.frame(50);
   for (const invalid of [NaN, Infinity, -1]) m.inferred(invalid);
   assert.equal(m.snapshot().totalInferences, 0); assert.equal(m.snapshot().sessionMeanInferenceMs, null);
+});
+
+test('embedded-browser advice does not misclassify Safari or Chrome', () => {
+  assert.equal(embeddedBrowserName('Mozilla/5.0 MicroMessenger/8.0'), '微信');
+  assert.equal(embeddedBrowserName('Mozilla/5.0 Lark/7.0'), '飞书');
+  assert.equal(embeddedBrowserName('Mozilla/5.0 aweme/29.0'), '抖音 / TikTok');
+  assert.equal(embeddedBrowserName('Mozilla/5.0 Version/18.0 Mobile Safari/605.1'), null);
+  assert.equal(embeddedBrowserName('Mozilla/5.0 Chrome/130 Safari/537.36'), null);
 });

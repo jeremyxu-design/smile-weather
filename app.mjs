@@ -1,10 +1,11 @@
-import { ASSETS, CONFIG, MEDIAPIPE_VERSION, VERSION } from './config.mjs';
+import { ASSETS, embeddedBrowserName, CONFIG, MEDIAPIPE_VERSION, VERSION } from './config.mjs';
 import { ExpressionMachine, extractExpression, DetectionClock } from './expression.mjs';
 import { clamp, makeHead, coverTransform, estimateHead, indicesFromConnections, followHead } from './geometry.mjs';
 import { ParticleSystem, ParticleRenderer } from './particles.mjs';
 import { Metrics } from './metrics.mjs';
 
 const $ = id => document.getElementById(id);
+const embeddedBrowser = embeddedBrowserName(navigator.userAgent);
 const video = $('camera'), stage = $('stage'), canvas = $('effects');
 const machine = new ExpressionMachine();
 const detectionClock = new DetectionClock();
@@ -44,7 +45,7 @@ function setSessionStatus(text, active = false) {
   $('session-dot').classList.toggle('muted-dot', !active);
 }
 function hideError() { $('error-panel').hidden = true; }
-function showError(title, copy) { $('error-title').textContent = title; $('error-copy').textContent = copy; $('error-panel').hidden = false; }
+function showError(title, copy) { $('browser-help').hidden = false; $('error-title').textContent = title; $('error-copy').textContent = copy; $('error-panel').hidden = false; }
 function previewTarget() {
   const rx = Math.min(width * 0.15, 105);
   return { cx: previewX * width, cy: previewY * height, rx, ry: rx * 1.22, angle: (previewX - 0.5) * 0.3, valid: true };
@@ -415,3 +416,19 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => stopSession());
 setMode('idle'); resize(); updateUi(performance.now());
+
+$('browser-help').hidden = !embeddedBrowser;
+$('browser-help-copy').textContent = embeddedBrowser
+  ? `你正在${embeddedBrowser}内打开。若摄像头无法启动，请复制链接到 Safari 或 Chrome；也可继续尝试或先体验模拟效果。`
+  : '若摄像头无法启动，请复制链接到 Safari 或 Chrome，允许摄像头后重试。模拟效果也可使用。';
+$('copy-link').addEventListener('click', async () => {
+  const url = new URL(location.href); url.search = ''; url.hash = '';
+  try {
+    await navigator.clipboard.writeText(url.href);
+    $('copy-status').textContent = '链接已复制，请粘贴到 Safari 或 Chrome 打开。';
+  } catch {
+    $('copy-url').hidden = false; $('copy-url').value = url.href;
+    $('copy-url').focus(); $('copy-url').select();
+    $('copy-status').textContent = '未能自动复制，请长按或手动复制下方链接。';
+  }
+});
